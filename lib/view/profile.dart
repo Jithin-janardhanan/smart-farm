@@ -55,7 +55,12 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
             ),
-            ElevatedButton(onPressed:(){}, child: Text('Update'))
+            ElevatedButton(
+              onPressed: () {
+                controller.updateProfile();
+              },
+              child: Text("Save Profile"),
+            ),
           ],
         );
       }),
