@@ -1,25 +1,21 @@
 import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
 import 'package:http/http.dart' as http;
-import 'package:smartfarm/model/farmer_model.dart';
+import 'package:smartfarm/model/profile_model.dart';
 
 import 'package:smartfarm/view/home.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.20.29:8002';
+  static const String baseUrl = 'http://192.168.20.29:8002/api';
 
-  static Future<Map<String, dynamic>> login(String phone, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String phone,
+    String password,
+  ) async {
     var url = Uri.parse('$baseUrl/farmer-login/');
-    var headers = {
-      'Content-Type': 'application/json',
+    var headers = {'Content-Type': 'application/json'};
 
-    };
-
-    var body = json.encode({
-      "phone_number": phone,
-      "password": password
-    });
+    var body = json.encode({"phone_number": phone, "password": password});
 
     var request = http.Request('POST', url);
     request.body = body;
@@ -31,14 +27,12 @@ class ApiService {
     if (response.statusCode == 200) {
       Get.to(home());
       return json.decode(response.body);
-      
-
     } else {
       throw Exception('Login failed: ${response.reasonPhrase}');
     }
   }
 
-   static Future<Farmer> getFarmerProfile(String token) async {
+  static Future<Farmer> getFarmerProfile(String token) async {
     var url = Uri.parse('$baseUrl/farmer-profile/');
     var headers = {
       'Authorization': 'Token $token',
@@ -54,5 +48,4 @@ class ApiService {
       throw Exception('Failed to load farmer profile');
     }
   }
-
 }

@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/model/user.model.dart';
 import 'package:smartfarm/service/api_service.dart';
 
-
 class LoginController extends GetxController {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
@@ -32,12 +31,14 @@ class LoginController extends GetxController {
 
       Get.snackbar("Success", "Token saved & login successful");
       log("Token saved: ${user.token}");
-
-
-
     } catch (e) {
       log("debug:${e.toString()}");
-      Get.snackbar("Error", e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        "Check",
+        e.toString(),
+        backgroundColor: const Color.fromARGB(255, 7, 6, 6),
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
