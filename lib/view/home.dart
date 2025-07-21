@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/farm.controller.dart';
+import 'package:smartfarm/view/motors.dart';
 import 'package:smartfarm/view/profile.dart';
 
 class HomePage extends StatelessWidget {
+
   final FarmController controller = Get.put(FarmController());
+
+   HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +40,10 @@ class HomePage extends StatelessWidget {
               return Card(
                 margin: EdgeInsets.all(10),
                 child: ListTile(
+                  onTap: () {
+                    Get.to(() => MotorListPage(farmId: farm.id));
+                  },
+
                   title: Text(
                     farm.farmName,
                     style: TextStyle(fontWeight: FontWeight.bold),

@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +27,7 @@ class LoginController extends GetxController {
       await prefs.setString('token', user.token);
       await prefs.setInt('user_id', user.userId);
       await prefs.setInt('farmer_id', user.farmerId);
+      await prefs.setBool('isLoggedIn', true);
 
       Get.snackbar("Success", "Token saved & login successful");
       log("Token saved: ${user.token}");

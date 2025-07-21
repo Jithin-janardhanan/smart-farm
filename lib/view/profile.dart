@@ -7,6 +7,8 @@ import '../controller/profile_controller.dart';
 class ProfilePage extends StatelessWidget {
   final profileController controller = Get.put(profileController());
 
+  ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,6 +24,7 @@ class ProfilePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
+              controller.logout();
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
               Get.offAll(() => LoginPage());
