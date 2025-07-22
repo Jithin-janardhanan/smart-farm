@@ -3,11 +3,7 @@ class User {
   final int userId;
   final int farmerId;
 
-  User({
-    required this.token,
-    required this.userId,
-    required this.farmerId,
-  });
+  User({required this.token, required this.userId, required this.farmerId});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(

@@ -5,10 +5,11 @@ import 'package:smartfarm/view/motors.dart';
 import 'package:smartfarm/view/profile.dart';
 
 class HomePage extends StatelessWidget {
+  final String token;
 
-  final FarmController controller = Get.put(FarmController());
+  FarmController controller = Get.put(FarmController());
 
-   HomePage({super.key});
+  HomePage({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {

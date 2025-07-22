@@ -25,9 +25,9 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 1)); // optional splash delay
 
     if (isLoggedIn) {
-      Get.off(() => HomePage());
+      Get.off(() => HomePage(token: ''));
     } else {
-      Get.off(() =>LoginPage());
+      Get.off(() => LoginPage());
     }
   }
 

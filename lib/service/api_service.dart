@@ -4,10 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/profile_model.dart';
+import 'package:smartfarm/model/vales_model.dart';
 import 'package:smartfarm/view/home.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://jithinj.pythonanywhere.com/api';
+  static const String baseUrl = 'http://192.168.20.29:8002/api';
 
   // LOGIN
   static Future<Map<String, dynamic>> login(
@@ -26,7 +27,6 @@ class ApiService {
     var response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
-      Get.off(HomePage());
       return json.decode(response.body);
     } else {
       throw Exception('Login failed: ${response.body}');
@@ -78,9 +78,6 @@ class ApiService {
     final headers = {'Authorization': 'Token $token'};
 
     final response = await http.get(url, headers: headers);
-    print('Saved Token: $token');
-    print('Status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final List jsonList = json.decode(response.body);
@@ -110,24 +107,49 @@ class ApiService {
     }
   }
 
+  //Get valves
+  static Future<List<Valve>> getValves(String token, int farmId) async {
+    final url = Uri.parse('$baseUrl/valves/?farm_id=$farmId');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data.map((e) => Valve.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load valves: ${response.statusCode}');
+    }
+  }
+
   // LOGOUT
   static Future<String> logoutUser(String token) async {
     var url = Uri.parse('$baseUrl/logout/');
-    var headers = {'Authorization': 'Token $token'};
 
-    var request = http.Request('POST', url);
-    request.headers.addAll(headers);
-    request.body = ''; // Empty body
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-    http.StreamedResponse response = await request.send();
-    var respond = await http.Response.fromStream(response);
-
-    if (response.statusCode == 200) {
-      final data = json.decode(respond.body);
-      return data['message'] ?? 'Logged out successfully';
-    } else {
-      final error = json.decode(respond.body);
-      throw Exception(error['detail'] ?? 'Logout failed: ${respond.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['message'] ?? 'Logged out successfully';
+      } else {
+        final error = json.decode(response.body);
+        throw Exception(
+          error['detail'] ?? 'Logout failed: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Network error during logout: ${e.toString()}');
     }
   }
 }

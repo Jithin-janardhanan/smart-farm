@@ -86,8 +86,7 @@ class profileController extends GetxController {
     }
   }
 
- // Update path to your login screen
-
+  // Update path to your login screen
 
   Future<void> logout() async {
     isLoading.value = true;
@@ -97,28 +96,25 @@ class profileController extends GetxController {
 
     try {
       String message = await ApiService.logoutUser(token);
-
-      // Clear token from local storage
+      // Show success snackbar only if API call succeeds
+      Get.snackbar("Success", message, snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
       await prefs.remove('token');
 
       // Navigate to login
       Get.offAll(() => LoginPage());
-
-      // Show success snackbar
-      Get.snackbar("Success", message, snackPosition: SnackPosition.BOTTOM);
-    } catch (e) {
-      Get.snackbar("Logout Failed", e.toString(),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white);
-    } finally {
-      isLoading.value = false;
+      // Show error but don't prevent logout
+      Get.snackbar(
+        "Logout Warning",
+        "Logged out locally, but server logout failed",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
     }
+
+    // Always clear token and navigate - regardless of API response
+
+    isLoading.value = false;
   }
 }
-
-
-
-
-
-

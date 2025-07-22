@@ -2,8 +2,10 @@ import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartfarm/controller/farm.controller.dart';
 import 'package:smartfarm/model/user.model.dart';
 import 'package:smartfarm/service/api_service.dart';
+import 'package:smartfarm/view/home.dart';
 
 class LoginController extends GetxController {
   final phoneController = TextEditingController();
@@ -28,6 +30,8 @@ class LoginController extends GetxController {
       await prefs.setInt('user_id', user.userId);
       await prefs.setInt('farmer_id', user.farmerId);
       await prefs.setBool('isLoggedIn', true);
+      Get.put(FarmController());
+      Get.off(() => HomePage(token: user.token));
 
       Get.snackbar("Success", "Token saved & login successful");
       log("Token saved: ${user.token}");

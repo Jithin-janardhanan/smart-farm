@@ -12,6 +12,11 @@ class FarmController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
+
+      if (token.isEmpty) {
+        throw Exception("Token not found");
+      }
+
       farms.value = await ApiService.getFarms(token);
     } catch (e) {
       Get.snackbar("Error", e.toString());
@@ -22,7 +27,7 @@ class FarmController extends GetxController {
 
   @override
   void onInit() {
-    fetchFarms();
     super.onInit();
+    fetchFarms();
   }
 }

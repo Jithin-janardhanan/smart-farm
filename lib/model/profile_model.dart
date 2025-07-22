@@ -44,20 +44,19 @@ class Farmer {
     );
   }
   Map<String, dynamic> toJson() {
-  return {
-    'id': id,
-    'username': username,
-    'first_name': firstName,
-    'last_name': lastName,
-    'email': email,
-    'phone_number': phoneNumber,
-    'aadhar_number': aadharNumber,
-    'house_name': houseName,
-    'village': village,
-    'district': district,
-    'state': state,
-    'pincode': pincode,
-  };
-}
-
+    return {
+      'id': id,
+      'username': username,
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'phone_number': phoneNumber,
+      'aadhar_number': aadharNumber,
+      'house_name': houseName,
+      'village': village,
+      'district': district,
+      'state': state,
+      'pincode': pincode,
+    };
+  }
 }
