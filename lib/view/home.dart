@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm.controller.dart';
 import 'package:smartfarm/view/motors.dart';
 import 'package:smartfarm/view/profile.dart';
@@ -7,9 +8,20 @@ import 'package:smartfarm/view/profile.dart';
 class HomePage extends StatelessWidget {
   final String token;
 
-  FarmController controller = Get.put(FarmController());
+  FarmController farmController = Get.put(FarmController());
 
   HomePage({super.key, required this.token});
+
+  Future<void> navigateToMotors(int farmId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token != null) {
+      Get.to(() => MotorListPage(farmId: farmId, token: token));
+    } else {
+      print("Token not found");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,21 +40,21 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        if (farmController.isLoading.value) {
           return Center(child: CircularProgressIndicator());
         }
 
         return RefreshIndicator(
-          onRefresh: controller.fetchFarms,
+          onRefresh: farmController.fetchFarms,
           child: ListView.builder(
-            itemCount: controller.farms.length,
+            itemCount: farmController.farms.length,
             itemBuilder: (context, index) {
-              final farm = controller.farms[index];
+              final farm = farmController.farms[index];
               return Card(
                 margin: EdgeInsets.all(10),
                 child: ListTile(
                   onTap: () {
-                    Get.to(() => MotorListPage(farmId: farm.id));
+                    navigateToMotors(farm.id);
                   },
 
                   title: Text(

@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/profile_model.dart';
 import 'package:smartfarm/model/vales_model.dart';
-import 'package:smartfarm/view/home.dart';
+import 'package:smartfarm/model/valve_grouping.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.20.29:8002/api';
@@ -98,11 +97,17 @@ class ApiService {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
-      final List jsonList = json.decode(response.body);
-      return jsonList.map((e) => Motor.fromJson(e)).toList();
+      try {
+        final List<dynamic> jsonList = json.decode(response.body);
+        return jsonList.map((e) => Motor.fromJson(e)).toList();
+      } catch (e) {
+        throw Exception('Motor parsing error: $e');
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Invalid token');
     } else {
       throw Exception(
-        "Failed to load motors for farm $farmId: ${response.body}",
+        "Failed to load motors for farm $farmId (Status ${response.statusCode}): ${response.body}",
       );
     }
   }
@@ -124,6 +129,36 @@ class ApiService {
       throw Exception('Failed to load valves: ${response.statusCode}');
     }
   }
+    static Future<Map<String, List<ValveGrouping>>> getGroupedValves(int farmId, String token) async {
+    final url = Uri.parse('$baseUrl/farms/$farmId/valves/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+
+      List<ValveGrouping> inValves = jsonList
+          .where((v) => v['direction'] == 'IN')
+          .map((v) => ValveGrouping.fromJson(v))
+          .toList();
+
+      List<ValveGrouping> outValves = jsonList
+          .where((v) => v['direction'] == 'OUT')
+          .map((v) => ValveGrouping.fromJson(v))
+          .toList();
+
+      return {'in': inValves, 'out': outValves};
+    } else {
+      throw Exception("Failed to fetch valves: ${response.reasonPhrase}");
+    }
+  }
+
+
+  
 
   // LOGOUT
   static Future<String> logoutUser(String token) async {
