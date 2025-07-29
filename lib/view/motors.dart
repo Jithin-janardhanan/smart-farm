@@ -42,10 +42,32 @@ class MotorListPage extends StatelessWidget {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               ...controller.inMotors.map(
-                (motor) => ListTile(
-                  title: Text(motor.name),
-                  subtitle: Text(
-                    'Lora: ${motor.loraId}, Status: ${motor.status}',
+                (motor) => Card(
+                  child: ListTile(
+                    title: Text(motor.name),
+                    subtitle: Text(
+                      'Lora: ${motor.loraId}, Status: ${motor.status}',
+                    ),
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: motor.status == "ON"
+                            ? Colors.red
+                            : Colors.green,
+                      ),
+                      onPressed: () {
+                        final newStatus = motor.status == "ON" ? "OFF" : "ON";
+                        controller.toggleMotor(
+                          motorId: motor.id,
+                          status: newStatus,
+                          farmId: farmId,
+                          token: token,
+                        );
+                      },
+                      child: Text(
+                        motor.status == "ON" ? "Turn OFF" : "Turn ON",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -55,42 +77,80 @@ class MotorListPage extends StatelessWidget {
                 "Out Motors",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              ...controller.outMotors.map(
-                (motor) => ListTile(
-                  title: Text(motor.name),
-                  subtitle: Text(
-                    'Lora: ${motor.loraId}, Status: ${motor.status}',
+              ...controller.inMotors.map(
+                (motor) => Card(
+                  child: ListTile(
+                    title: Text(motor.name),
+                    subtitle: Text(
+                      'Lora: ${motor.loraId}, Status: ${motor.status}',
+                    ),
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: motor.status == "ON"
+                            ? Colors.red
+                            : Colors.green,
+                      ),
+                      onPressed: () {
+                        final newStatus = motor.status == "ON" ? "OFF" : "ON";
+                        controller.toggleMotor(
+                          motorId: motor.id,
+                          status: newStatus,
+                          farmId: farmId,
+                          token: token,
+                        );
+                      },
+                      child: Text(
+                        motor.status == "ON" ? "Turn OFF" : "Turn ON",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
               ),
 
               SizedBox(height: 16),
               Text(
-                "In Valves",
+                "Valve Groups",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              ...controller.inValves.map(
-                (valve) => ListTile(
-                  title: Text(valve.name),
-                  subtitle: Text(
-                    'Lora: ${valve.loraId}, Status: ${valve.status}',
-                  ),
-                ),
               ),
 
-              SizedBox(height: 16),
-              Text(
-                "Out Valves",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              ...controller.outValves.map(
-                (valve) => ListTile(
-                  title: Text(valve.name),
-                  subtitle: Text(
-                    'Lora: ${valve.loraId}, Status: ${valve.status}',
-                  ),
-                ),
-              ),
+              Obx(() {
+               return Column(
+  children: controller.groupedValves.map((group) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 6),
+      child: ExpansionTile(
+        title: Text(group.name),
+        subtitle: Text("Group ID: ${group.id}"),
+        trailing: Obx(() {
+          return Switch(
+            value: controller.groupToggleStates[group.id]?.value ?? false,
+            onChanged: (_) {
+              controller.toggleValveGroup(
+                groupId: group.id,
+                token: token,
+              );
+            },
+            activeColor: Colors.green,
+            inactiveThumbColor: Colors.red,
+          );
+        }),
+        children: group.valves.map((valve) {
+          return ListTile(
+            title: Text(valve.name),
+            subtitle: Text('Lora: ${valve.loraId}, Status: ${valve.status}'),
+            trailing: Icon(
+              valve.status == "ON" ? Icons.check_circle : Icons.power_off,
+              color: valve.status == "ON" ? Colors.green : Colors.grey,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }).toList(),
+);
+
+              }),
             ],
           ),
         );

@@ -1,4 +1,4 @@
-//valve listing for the group
+//indidual valve listing for the group
 
 class ValveGrouping {
   final int id;

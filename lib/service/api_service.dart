@@ -89,7 +89,11 @@ class ApiService {
   }
 
   // GET MOTORS BY FARM ID
-  static Future<List<Motor>> getMotorsByFarmId(String token, int farmId) async {
+
+  static Future<Map<String, List<dynamic>>> fetchMotorsAndValves({
+    required int farmId,
+    required String token,
+  }) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/motors/');
     final headers = {
       'Authorization': 'Token $token',
@@ -99,22 +103,77 @@ class ApiService {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
-      try {
-        final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList.map((e) => Motor.fromJson(e)).toList();
-      } catch (e) {
-        throw Exception('Motor parsing error: $e');
-      }
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized: Invalid token');
+      final data = jsonDecode(response.body);
+
+      return {
+        'inMotors': List<Motor>.from(
+          data['motors']['in'].map((m) => Motor.fromJson(m)),
+        ),
+        'outMotors': List<Motor>.from(
+          data['motors']['out'].map((m) => Motor.fromJson(m)),
+        ),
+        'inValves': List<Valve>.from(
+          data['valves']['in'].map((v) => Valve.fromJson(v)),
+        ),
+        'outValves': List<Valve>.from(
+          data['valves']['out'].map((v) => Valve.fromJson(v)),
+        ),
+      };
     } else {
-      throw Exception(
-        "Failed to load motors for farm $farmId (Status ${response.statusCode}): ${response.body}",
-      );
+      throw Exception('Failed to load motors and valves');
     }
   }
 
-  //Get valves for indviduals listing 
+
+  //MOtor on and offf API
+
+  static Future<String> controlMotor({
+  required int motorId,
+  required String status, // "ON" or "OFF"
+  required String token,
+}) async {
+  final url = Uri.parse('$baseUrl/motors/$motorId/manual-control/');
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
+  final body = json.encode({"status": status});
+
+  final response = await http.post(url, headers: headers, body: body);
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body)['message'] ?? 'Success';
+  } else {
+    throw Exception('Failed to control motor');
+  }
+}
+
+  // static Future<List<Motor>> getMotorsByFarmId(String token, int farmId) async {
+  //   final url = Uri.parse('$baseUrl/farms/$farmId/motors/');
+  //   final headers = {
+  //     'Authorization': 'Token $token',
+  //     'Content-Type': 'application/json',
+  //   };
+
+  //   final response = await http.get(url, headers: headers);
+
+  //   if (response.statusCode == 200) {
+  //     try {
+  //       final List<dynamic> jsonList = json.decode(response.body);
+  //       return jsonList.map((e) => Motor.fromJson(e)).toList();
+  //     } catch (e) {
+  //       throw Exception('Motor parsing error: $e');
+  //     }
+  //   } else if (response.statusCode == 401) {
+  //     throw Exception('Unauthorized: Invalid token');
+  //   } else {
+  //     throw Exception(
+  //       "Failed to load motors for farm $farmId (Status ${response.statusCode}): ${response.body}",
+  //     );
+  //   }
+  // }
+
+  //Get valves for indviduals listing
   static Future<List<Valve>> getValves(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/valves/?farm_id=$farmId');
     final headers = {
@@ -131,7 +190,11 @@ class ApiService {
       throw Exception('Failed to load valves: ${response.statusCode}');
     }
   }
-    static Future<Map<String, List<ValveGrouping>>> getGroupedValves(int farmId, String token) async {
+
+  static Future<Map<String, List<ValveGrouping>>> getGroupedValves(
+    int farmId,
+    String token,
+  ) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/valves/');
     final headers = {
       'Authorization': 'Token $token',
@@ -160,78 +223,103 @@ class ApiService {
   }
 
   // list out grouped valve
-static Future<List<ValveGroup>> getGroupedValveList(String token) async {
-  final url = Uri.parse('$baseUrl/valve-groups/');
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
 
-  final response = await http.get(url, headers: headers);
+  static Future<List<ValveGroup>> getGroupedValveList(String token) async {
+    final url = Uri.parse('$baseUrl/valve-groups/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  if (response.statusCode == 200) {
-    final List<dynamic> jsonList = jsonDecode(response.body);
-    return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
-  } else {
-    throw Exception("Failed to fetch grouped valves");
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to fetch grouped valves");
+    }
   }
-}
 
   //creating group request
 
-static Future<bool> createValveGroup(
-    String token, ValveGroupRequest request) async {
-  final url = Uri.parse('$baseUrl/valve-groups/');
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
+  static Future<bool> createValveGroup(
+    String token,
+    ValveGroupRequest request,
+  ) async {
+    final url = Uri.parse('$baseUrl/valve-groups/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  final response = await http.post(
-    url,
-    headers: headers,
-    body: json.encode(request.toJson()),
-  );
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: json.encode(request.toJson()),
+    );
 
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    return true;
-  } else {
-    throw Exception('Failed to create valve group: ${response.statusCode}');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else {
+      throw Exception('Failed to create valve group: ${response.statusCode}');
+    }
   }
-}
 
   //Edit valve group
 
   static Future<bool> updateValveGroup({
-  required String token,
+    required String token,
+    required int groupId,
+    required int farmId,
+    required String name,
+    required List<int> valveIds,
+  }) async {
+    final url = Uri.parse('$baseUrl/valve-groups/$groupId/update/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final body = jsonEncode({
+      'farm': farmId,
+      'name': name,
+      'valve_ids': valveIds,
+    });
+
+    final response = await http.put(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Failed to update valve group: ${response.body}");
+      return false;
+    }
+  }
+  //Group Valve Control
+
+  static Future<String> controlValveGroup({
   required int groupId,
-  required int farmId,
-  required String name,
-  required List<int> valveIds,
+  required String status, // "ON" or "OFF"
+  required String token,
 }) async {
-  final url = Uri.parse('$baseUrl/valve-groups/$groupId/update/');
+  final url = Uri.parse('$baseUrl/valve-groups/$groupId/manual-control/');
   final headers = {
     'Authorization': 'Token $token',
     'Content-Type': 'application/json',
   };
 
-  final body = jsonEncode({
-    'farm': farmId,
-    'name': name,
-    'valve_ids': valveIds,
-  });
+  final body = json.encode({"status": status});
 
-  final response = await http.put(url, headers: headers, body: body);
+  final response = await http.post(url, headers: headers, body: body);
 
   if (response.statusCode == 200) {
-    return true;
+    return jsonDecode(response.body)['message'] ?? 'Success';
   } else {
-    print("Failed to update valve group: ${response.body}");
-    return false;
+    throw Exception('Failed to control valve group');
   }
 }
 
-  
 
   // LOGOUT
   static Future<String> logoutUser(String token) async {
