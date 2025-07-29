@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smartfarm/controller/farm.controller.dart';
+import 'package:smartfarm/controller/farm_controller.dart';
 import 'package:smartfarm/view/motors.dart';
 import 'package:smartfarm/view/profile.dart';
 
@@ -33,14 +33,14 @@ class HomePage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: IconButton(
-              onPressed: () => Get.to(ProfilePage()),
+              onPressed: () => Get.to(ProfileView()),
               icon: Icon(Icons.person),
             ),
           ),
         ],
       ),
       body: Obx(() {
-        if (farmController.isLoading.value) {
+        if (farmController.isLoading.value) { 
           return Center(child: CircularProgressIndicator());
         }
 

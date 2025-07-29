@@ -7,7 +7,7 @@ class MotorListPage extends StatelessWidget {
   final int farmId;
   final String token; // Pass token from login
 
-  MotorListPage({required this.farmId, required this.token});
+  MotorListPage({super.key, required this.farmId, required this.token});
 
   final MotorController controller = Get.put(MotorController());
 
@@ -16,13 +16,17 @@ class MotorListPage extends StatelessWidget {
     controller.fetchMotorsAndValves(farmId, token);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Motors & Valves'),actions: [ElevatedButton(
-  onPressed: () {
-    Get.to(() => ValveGroupingPage(farmId: farmId, token: token));
-  },
-  child: Text("Go to Valve Grouping"),
-),
-],),
+      appBar: AppBar(
+        title: Text('Motors & Valves'),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Get.to(() => ValveGroupPage(farmId: farmId, token: token));
+            },
+            child: Text("Go to Valve Grouping"),
+          ),
+        ],
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return Center(child: CircularProgressIndicator());

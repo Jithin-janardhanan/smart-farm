@@ -1,11 +1,13 @@
-class ValveGrouping  {
+//valve listing for the group
+
+class ValveGrouping {
   final int id;
   final String name;
   final String loraId;
   final String direction;
   final String status;
 
-  ValveGrouping ({
+  ValveGrouping({
     required this.id,
     required this.name,
     required this.loraId,

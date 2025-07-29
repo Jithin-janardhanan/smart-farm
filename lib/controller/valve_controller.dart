@@ -1,4 +1,4 @@
-// valve_controller.dart
+// valve_list_controller.dart
 
 import 'package:get/get.dart';
 import '../model/valve_grouping.dart';
@@ -23,4 +23,3 @@ class ValveController extends GetxController {
     isLoading.value = false;
   }
 }
- 

@@ -39,7 +39,7 @@ class MotorController extends GetxController {
         data['valves']['out'].map((v) => Valve.fromJson(v)),
       );
     } else {
-      print('Failed to load: ${response.reasonPhrase}');
+    
     }
 
     isLoading.value = false;

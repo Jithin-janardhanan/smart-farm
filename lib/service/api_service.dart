@@ -4,6 +4,8 @@ import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/profile_model.dart';
 import 'package:smartfarm/model/vales_model.dart';
+import 'package:smartfarm/model/valve_group_model.dart';
+import 'package:smartfarm/model/valve_group_request.dart';
 import 'package:smartfarm/model/valve_grouping.dart';
 
 class ApiService {
@@ -112,7 +114,7 @@ class ApiService {
     }
   }
 
-  //Get valves
+  //Get valves for indviduals listing 
   static Future<List<Valve>> getValves(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/valves/?farm_id=$farmId');
     final headers = {
@@ -157,6 +159,77 @@ class ApiService {
     }
   }
 
+  // list out grouped valve
+static Future<List<ValveGroup>> getGroupedValveList(String token) async {
+  final url = Uri.parse('$baseUrl/valve-groups/');
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
+
+  final response = await http.get(url, headers: headers);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> jsonList = jsonDecode(response.body);
+    return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
+  } else {
+    throw Exception("Failed to fetch grouped valves");
+  }
+}
+
+  //creating group request
+
+static Future<bool> createValveGroup(
+    String token, ValveGroupRequest request) async {
+  final url = Uri.parse('$baseUrl/valve-groups/');
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
+
+  final response = await http.post(
+    url,
+    headers: headers,
+    body: json.encode(request.toJson()),
+  );
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return true;
+  } else {
+    throw Exception('Failed to create valve group: ${response.statusCode}');
+  }
+}
+
+  //Edit valve group
+
+  static Future<bool> updateValveGroup({
+  required String token,
+  required int groupId,
+  required int farmId,
+  required String name,
+  required List<int> valveIds,
+}) async {
+  final url = Uri.parse('$baseUrl/valve-groups/$groupId/update/');
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
+
+  final body = jsonEncode({
+    'farm': farmId,
+    'name': name,
+    'valve_ids': valveIds,
+  });
+
+  final response = await http.put(url, headers: headers, body: body);
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    print("Failed to update valve group: ${response.body}");
+    return false;
+  }
+}
 
   
 
