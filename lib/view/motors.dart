@@ -115,41 +115,48 @@ class MotorListPage extends StatelessWidget {
               ),
 
               Obx(() {
-               return Column(
-  children: controller.groupedValves.map((group) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 6),
-      child: ExpansionTile(
-        title: Text(group.name),
-        subtitle: Text("Group ID: ${group.id}"),
-        trailing: Obx(() {
-          return Switch(
-            value: controller.groupToggleStates[group.id]?.value ?? false,
-            onChanged: (_) {
-              controller.toggleValveGroup(
-                groupId: group.id,
-                token: token,
-              );
-            },
-            activeColor: Colors.green,
-            inactiveThumbColor: Colors.red,
-          );
-        }),
-        children: group.valves.map((valve) {
-          return ListTile(
-            title: Text(valve.name),
-            subtitle: Text('Lora: ${valve.loraId}, Status: ${valve.status}'),
-            trailing: Icon(
-              valve.status == "ON" ? Icons.check_circle : Icons.power_off,
-              color: valve.status == "ON" ? Colors.green : Colors.grey,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }).toList(),
-);
-
+                return Column(
+                  children: controller.groupedValves.map((group) {
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 6),
+                      child: ExpansionTile(
+                        title: Text(group.name),
+                        subtitle: Text("Group ID: ${group.id}"),
+                        trailing: Obx(() {
+                          return Switch(
+                            value:
+                                controller.groupToggleStates[group.id]?.value ??
+                                false,
+                            onChanged: (_) {
+                              controller.toggleValveGroup(
+                                groupId: group.id,
+                                token: token,
+                              );
+                            },
+                            activeColor: Colors.green,
+                            inactiveThumbColor: Colors.red,
+                          );
+                        }),
+                        children: group.valves.map((valve) {
+                          return ListTile(
+                            title: Text(valve.name),
+                            subtitle: Text(
+                              'Lora: ${valve.loraId}, Status: ${valve.status}',
+                            ),
+                            trailing: Icon(
+                              valve.status == "ON"
+                                  ? Icons.check_circle
+                                  : Icons.power_off,
+                              color: valve.status == "ON"
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  }).toList(),
+                );
               }),
             ],
           ),

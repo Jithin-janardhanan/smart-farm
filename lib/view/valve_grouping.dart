@@ -181,7 +181,7 @@ class ValveGroupPage extends StatelessWidget {
   final String token;
   final int farmId;
 
-  ValveGroupPage({required this.token, required this.farmId});
+  ValveGroupPage({super.key, required this.token, required this.farmId});
 
   final groupController = Get.put(CreateValveGroupController());
   final valveController = Get.put(ValveController());

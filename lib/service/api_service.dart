@@ -21,7 +21,7 @@ class ApiService {
     var body = json.encode({"phone_number": phone, "password": password});
 
     var request = http.Request('POST', url);
-    request.body = body;
+    request.body = body; 
     request.headers.addAll(headers);
 
     var streamedResponse = await request.send();
@@ -124,29 +124,28 @@ class ApiService {
     }
   }
 
-
   //MOtor on and offf API
 
   static Future<String> controlMotor({
-  required int motorId,
-  required String status, // "ON" or "OFF"
-  required String token,
-}) async {
-  final url = Uri.parse('$baseUrl/motors/$motorId/manual-control/');
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
-  final body = json.encode({"status": status});
+    required int motorId,
+    required String status, // "ON" or "OFF"
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/motors/$motorId/manual-control/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+    final body = json.encode({"status": status});
 
-  final response = await http.post(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body)['message'] ?? 'Success';
-  } else {
-    throw Exception('Failed to control motor');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['message'] ?? 'Success';
+    } else {
+      throw Exception('Failed to control motor');
+    }
   }
-}
 
   // static Future<List<Motor>> getMotorsByFarmId(String token, int farmId) async {
   //   final url = Uri.parse('$baseUrl/farms/$farmId/motors/');
@@ -299,27 +298,26 @@ class ApiService {
   //Group Valve Control
 
   static Future<String> controlValveGroup({
-  required int groupId,
-  required String status, // "ON" or "OFF"
-  required String token,
-}) async {
-  final url = Uri.parse('$baseUrl/valve-groups/$groupId/manual-control/');
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
+    required int groupId,
+    required String status, // "ON" or "OFF"
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/valve-groups/$groupId/manual-control/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  final body = json.encode({"status": status});
+    final body = json.encode({"status": status});
 
-  final response = await http.post(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body)['message'] ?? 'Success';
-  } else {
-    throw Exception('Failed to control valve group');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['message'] ?? 'Success';
+    } else {
+      throw Exception('Failed to control valve group');
+    }
   }
-}
-
 
   // LOGOUT
   static Future<String> logoutUser(String token) async {
