@@ -1,53 +1,10 @@
-// import 'package:get/get.dart';
-// import 'package:smartfarm/model/motor_model.dart';
-// import 'package:smartfarm/model/vales_model.dart';
+import 'dart:convert';
 
-// import 'dart:convert';
-// import 'package:http/http.dart' as http;
-
-// class MotorController extends GetxController {
-//   var inMotors = <Motor>[].obs;
-//   var outMotors = <Motor>[].obs;
-//   var inValves = <Valve>[].obs;
-//   var outValves = <Valve>[].obs;
-//   var isLoading = false.obs;
-
-//   Future<void> fetchMotorsAndValves(int farmId, String token) async {
-//     isLoading.value = true;
-
-//     final url = 'http://192.168.20.29:8002/api/farms/$farmId/motors/';
-//     var headers = {
-//       'Authorization': 'Token $token',
-//       'Content-Type': 'application/json',
-//     };
-
-//     final response = await http.get(Uri.parse(url), headers: headers);
-
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       inMotors.value = List<Motor>.from(
-//         data['motors']['in'].map((m) => Motor.fromJson(m)),
-//       );
-//       outMotors.value = List<Motor>.from(
-//         data['motors']['out'].map((m) => Motor.fromJson(m)),
-//       );
-//       inValves.value = List<Valve>.from(
-//         data['valves']['in'].map((v) => Valve.fromJson(v)),
-//       );
-//       outValves.value = List<Valve>.from(
-//         data['valves']['out'].map((v) => Valve.fromJson(v)),
-//       );
-//     } else {
-
-//     }
-
-//     isLoading.value = false;
-//   }
-// }
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/motor_model.dart';
-import 'package:smartfarm/model/vales_model.dart';
-import 'package:smartfarm/model/valve_group_model.dart';
+import 'package:smartfarm/model/valves_model.dart';
+import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/service/api_service.dart';
 
 class MotorController extends GetxController {
@@ -60,6 +17,8 @@ class MotorController extends GetxController {
 
   var isLoading = false.obs;
 
+  var ungroupedValves = <Valve>[].obs;
+
   Future<void> fetchMotorsAndValves(int farmId, String token) async {
     isLoading.value = true;
 
@@ -71,10 +30,11 @@ class MotorController extends GetxController {
 
       inMotors.value = result['inMotors'] as List<Motor>;
       outMotors.value = result['outMotors'] as List<Motor>;
-      inValves.value = result['inValves'] as List<Valve>;
-      outValves.value = result['outValves'] as List<Valve>;
+      // outValves.value = result['outValves'] as List<Valve>;
+      // inValves.value = result['inValves'] as List<Valve>;
 
-      await fetchGroupedValves(token);
+      await fetchGroupedValves(token, farmId);
+      await fetchUngroupedValves(token, farmId);
     } catch (e) {
       Get.snackbar("Error", "Failed to fetch motors and valves");
     } finally {
@@ -108,16 +68,18 @@ class MotorController extends GetxController {
 
   var isLoadingGroups = false.obs;
 
-  Future<void> fetchGroupedValves(String token) async {
+  //fetch grouped valves
+
+  Future<void> fetchGroupedValves(String token, int farmId) async {
     isLoadingGroups.value = true;
     try {
-      final groups = await ApiService.getGroupedValveList(token);
+      final groups = await ApiService.getGroupedValveList(token, farmId);
       groupedValves.value = groups;
 
-      // Set up toggle states
       for (var group in groups) {
-        final isGroupOn = group.valves.any((v) => v.status == "ON");
-        groupToggleStates[group.id] = RxBool(isGroupOn);
+        groupToggleStates[group.id] = RxBool(
+          group.isOn,
+        ); // assuming isOn maps to `is_on`
       }
     } catch (e) {
       Get.snackbar("Error", "Failed to load grouped valves");
@@ -127,9 +89,11 @@ class MotorController extends GetxController {
   }
 
   //Group Valve Control
+
   Future<void> toggleValveGroup({
     required int groupId,
     required String token,
+    required int farmId, // Add farmId as required
   }) async {
     final currentStatus = groupToggleStates[groupId]?.value ?? false;
     final newStatus = currentStatus ? "OFF" : "ON";
@@ -142,12 +106,52 @@ class MotorController extends GetxController {
         token: token,
       );
 
-      await fetchGroupedValves(token); // Refresh valves
+      await fetchGroupedValves(token, farmId); // ✅ Fix: pass farmId here
       Get.snackbar("Success", msg);
     } catch (e) {
-      Get.snackbar("Error", "Failed to toggle group valves");
+      Get.snackbar("Error", "Failed to toggle valve group");
     } finally {
       isLoadingGroups.value = false;
+    }
+  }
+
+  //fetch individual ungrouped valve
+
+  Future<void> fetchUngroupedValves(String token, int farmId) async {
+    try {
+      final valves = await ApiService.getUngroupedValves(token, farmId);
+      ungroupedValves.value = valves;
+    } catch (e) {
+      Get.snackbar("Error", "Failed to fetch ungrouped valves");
+    }
+  }
+  // individual Valve Control
+
+  Future<void> toggleValve({
+    required int valveId,
+    required String status, // "ON" or "OFF"
+    required String token,
+    required int farmId,
+  }) async {
+    try {
+      // isLoading.value = true;
+
+      final message = await ApiService.controlIndividualValve(
+        valveId: valveId,
+        status: status,
+        token: token,
+      );
+
+      // Refresh valve data
+      await fetchGroupedValves(token, farmId);
+      await fetchUngroupedValves(token, farmId);
+
+      Get.snackbar("Success", message);
+    } catch (e) {
+      Get.snackbar("Error", "Failed to toggle valve");
+      print("Error: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 }

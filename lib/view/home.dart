@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
 import 'package:smartfarm/view/motors.dart';
 import 'package:smartfarm/view/profile.dart';
+import 'package:smartfarm/view/tab_controller.dart';
 
 class HomePage extends StatelessWidget {
   final String token;
@@ -17,7 +18,7 @@ class HomePage extends StatelessWidget {
     String? token = prefs.getString('token');
 
     if (token != null) {
-      Get.to(() => MotorListPage(farmId: farmId, token: token));
+      Get.to(() => IoTDashboardPage(farmId: farmId, token: token));
     } else {
       print("Token not found");
     }
@@ -40,7 +41,7 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (farmController.isLoading.value) { 
+        if (farmController.isLoading.value) {
           return Center(child: CircularProgressIndicator());
         }
 

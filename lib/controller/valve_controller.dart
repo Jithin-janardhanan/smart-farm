@@ -1,7 +1,7 @@
-// valve_list_controller.dart
+//individual valve_list_controller.dart
 
 import 'package:get/get.dart';
-import '../model/valve_grouping.dart';
+import '../model/valve_list.dart';
 import '../service/api_service.dart';
 
 class ValveController extends GetxController {

@@ -74,8 +74,8 @@
 // }
 // create_valve_group_controller.dart
 import 'package:get/get.dart';
-import 'package:smartfarm/model/valve_group_model.dart';
-import 'package:smartfarm/model/valve_group_request.dart';
+import 'package:smartfarm/model/grouped_valve_listing_model.dart';
+import 'package:smartfarm/model/create_group.dart';
 import '../service/api_service.dart';
 
 class CreateValveGroupController extends GetxController {
@@ -91,15 +91,16 @@ class CreateValveGroupController extends GetxController {
   var editingGroup = Rxn<ValveGroup>();
 
   // Fetch list
-  Future<void> fetchGroupedValves(String token) async {
+  Future<void> fetchGroupedValves(String token, int farmId) async {
     isLoadingGroups.value = true;
     try {
-      final groups = await ApiService.getGroupedValveList(token);
+      final groups = await ApiService.getGroupedValveList(token, farmId);
       groupedValves.value = groups;
     } catch (e) {
       print("Fetch group error: $e");
+    } finally {
+      isLoadingGroups.value = false;
     }
-    isLoadingGroups.value = false;
   }
 
   // Submit (create)
@@ -124,7 +125,8 @@ class CreateValveGroupController extends GetxController {
     try {
       final created = await ApiService.createValveGroup(token, request);
       if (created) {
-        await fetchGroupedValves(token);
+        await fetchGroupedValves(token, farmId);
+
         clearForm();
       }
       onResult(created);
@@ -133,6 +135,29 @@ class CreateValveGroupController extends GetxController {
       onResult(false);
     }
 
+    isSubmitting.value = false;
+  }
+
+  Future<void> deleteGroup({
+    required String token,
+    required int groupId,
+    required int farmId,
+    required void Function(bool success) onResult,
+  }) async {
+    isSubmitting.value = true;
+    try {
+      final success = await ApiService.deleteValveGroup(
+        token: token,
+        groupId: groupId,
+      );
+      if (success) {
+        await fetchGroupedValves(token, farmId);
+      }
+      onResult(success);
+    } catch (e) {
+      print("Delete Group Error: $e");
+      onResult(false);
+    }
     isSubmitting.value = false;
   }
 
@@ -160,7 +185,8 @@ class CreateValveGroupController extends GetxController {
       );
 
       if (success) {
-        await fetchGroupedValves(token);
+        await fetchGroupedValves(token, farmId);
+
         clearForm();
       }
 

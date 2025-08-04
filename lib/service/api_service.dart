@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/profile_model.dart';
-import 'package:smartfarm/model/vales_model.dart';
-import 'package:smartfarm/model/valve_group_model.dart';
-import 'package:smartfarm/model/valve_group_request.dart';
-import 'package:smartfarm/model/valve_grouping.dart';
+import 'package:smartfarm/model/valves_model.dart';
+import 'package:smartfarm/model/grouped_valve_listing_model.dart';
+import 'package:smartfarm/model/create_group.dart';
+import 'package:smartfarm/model/valve_list.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.20.29:8002/api';
@@ -21,7 +21,7 @@ class ApiService {
     var body = json.encode({"phone_number": phone, "password": password});
 
     var request = http.Request('POST', url);
-    request.body = body; 
+    request.body = body;
     request.headers.addAll(headers);
 
     var streamedResponse = await request.send();
@@ -112,12 +112,12 @@ class ApiService {
         'outMotors': List<Motor>.from(
           data['motors']['out'].map((m) => Motor.fromJson(m)),
         ),
-        'inValves': List<Valve>.from(
-          data['valves']['in'].map((v) => Valve.fromJson(v)),
-        ),
-        'outValves': List<Valve>.from(
-          data['valves']['out'].map((v) => Valve.fromJson(v)),
-        ),
+        // 'inValves': List<Valve>.from(
+        //   data['valves']['in'].map((v) => Valve.fromJson(v)),
+        // ),
+        // 'outValves': List<Valve>.from(
+        //   data['valves']['out'].map((v) => Valve.fromJson(v)),
+        // ),
       };
     } else {
       throw Exception('Failed to load motors and valves');
@@ -147,48 +147,7 @@ class ApiService {
     }
   }
 
-  // static Future<List<Motor>> getMotorsByFarmId(String token, int farmId) async {
-  //   final url = Uri.parse('$baseUrl/farms/$farmId/motors/');
-  //   final headers = {
-  //     'Authorization': 'Token $token',
-  //     'Content-Type': 'application/json',
-  //   };
-
-  //   final response = await http.get(url, headers: headers);
-
-  //   if (response.statusCode == 200) {
-  //     try {
-  //       final List<dynamic> jsonList = json.decode(response.body);
-  //       return jsonList.map((e) => Motor.fromJson(e)).toList();
-  //     } catch (e) {
-  //       throw Exception('Motor parsing error: $e');
-  //     }
-  //   } else if (response.statusCode == 401) {
-  //     throw Exception('Unauthorized: Invalid token');
-  //   } else {
-  //     throw Exception(
-  //       "Failed to load motors for farm $farmId (Status ${response.statusCode}): ${response.body}",
-  //     );
-  //   }
-  // }
-
   //Get valves for indviduals listing
-  static Future<List<Valve>> getValves(String token, int farmId) async {
-    final url = Uri.parse('$baseUrl/valves/?farm_id=$farmId');
-    final headers = {
-      'Authorization': 'Token $token',
-      'Content-Type': 'application/json',
-    };
-
-    final response = await http.get(url, headers: headers);
-
-    if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
-      return data.map((e) => Valve.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load valves: ${response.statusCode}');
-    }
-  }
 
   static Future<Map<String, List<ValveGrouping>>> getGroupedValves(
     int farmId,
@@ -221,10 +180,36 @@ class ApiService {
     }
   }
 
+  // Get un grouped Valve List
+  static Future<List<Valve>> getUngroupedValves(
+    String token,
+    int farmId,
+  ) async {
+    final url = Uri.parse('$baseUrl/valves/ungrouped/?farm_id=$farmId');
+
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data as List).map((v) => Valve.fromJson(v)).toList();
+    } else {
+      throw Exception("Failed to fetch ungrouped valves");
+    }
+  }
+
   // list out grouped valve
 
-  static Future<List<ValveGroup>> getGroupedValveList(String token) async {
-    final url = Uri.parse('$baseUrl/valve-groups/');
+  static Future<List<ValveGroup>> getGroupedValveList(
+    String token,
+    int farmId,
+  ) async {
+    final url = Uri.parse('$baseUrl/valve-groups/?farm_id=$farmId');
+
     final headers = {
       'Authorization': 'Token $token',
       'Content-Type': 'application/json',
@@ -234,9 +219,10 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
+
       return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
     } else {
-      throw Exception("Failed to fetch grouped valves");
+      throw Exception("Failed to fetch grouped valves: ${response.body}");
     }
   }
 
@@ -291,11 +277,32 @@ class ApiService {
     if (response.statusCode == 200) {
       return true;
     } else {
-      print("Failed to update valve group: ${response.body}");
       return false;
     }
   }
-  //Group Valve Control
+
+  //Delete grouped valve
+
+  static Future<bool> deleteValveGroup({
+    required String token,
+    required int groupId,
+  }) async {
+    final url = Uri.parse('$baseUrl/valve-groups/$groupId/update/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.delete(url, headers: headers);
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  //Grouped Valve Control
 
   static Future<String> controlValveGroup({
     required int groupId,
@@ -316,6 +323,30 @@ class ApiService {
       return jsonDecode(response.body)['message'] ?? 'Success';
     } else {
       throw Exception('Failed to control valve group');
+    }
+  }
+
+  // individual Valve control
+
+  static Future<String> controlIndividualValve({
+    required int valveId,
+    required String status,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/valves/$valveId/manual-control/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final body = json.encode({'status': status});
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['message'] ?? 'Valve $status successful';
+    } else {
+      throw Exception('Failed to toggle valve: ${response.reasonPhrase}');
     }
   }
 
