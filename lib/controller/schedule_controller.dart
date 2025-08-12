@@ -1,47 +1,41 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/schedule_model.dart';
-
 import 'package:smartfarm/model/valve_list.dart';
 import 'package:smartfarm/service/api_service.dart';
 
 class ScheduleController extends GetxController {
   final int farmId;
   final String token;
+  final editingScheduleId = RxnInt(); // null = new, int = editing
+
+  // final RxBool showCreateForm = false.obs;
 
   ScheduleController({required this.farmId, required this.token});
 
   var isLoading = true.obs;
   var inMotors = <Motor>[].obs;
   var outMotors = <Motor>[].obs;
-
   var inValves = <ValveGrouping>[].obs;
   var outValves = <ValveGrouping>[].obs;
-
   var groupedValves = <ValveGroup>[].obs;
-
   var selectedMotorId = RxnInt();
   var selectedValveIds = <int>{}.obs;
   var selectedGroupId = RxnInt();
-
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
   var startTime = Rxn<TimeOfDay>();
   var endTime = Rxn<TimeOfDay>();
-
   var schedules = <Schedule>[].obs;
+  var showCreateForm = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     loadAllData();
-    fetchSchedules(); 
+    fetchSchedules();
   }
 
   Future<void> loadAllData() async {
@@ -80,6 +74,9 @@ class ScheduleController extends GetxController {
     selectedValveIds.clear();
   }
 
+  String formatTimeOfDay(TimeOfDay time) =>
+      "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00";
+
   Future<void> submitSchedule() async {
     if (selectedMotorId.value == null ||
         (selectedValveIds.isEmpty && selectedGroupId.value == null) ||
@@ -91,63 +88,139 @@ class ScheduleController extends GetxController {
       return;
     }
 
-    final url = Uri.parse('http://192.168.20.29:8002/api/schedules/');
-    final headers = {
-      'Authorization': 'Token $token',
-      'Content-Type': 'application/json',
-    };
+    try {
+      final response = await ApiService.submitSchedule(
+        token: token,
+        farmId: farmId,
+        motorId: selectedMotorId.value!,
+        valves: selectedValveIds.toList(),
+        valveGroupId: selectedGroupId.value,
+        startDate: startDate.value!.toIso8601String().split('T').first,
+        endDate: endDate.value!.toIso8601String().split('T').first,
+        startTime: formatTimeOfDay(startTime.value!),
+        endTime: formatTimeOfDay(endTime.value!),
+      );
 
-    final body = json.encode({
-      "farm": farmId, //
-      "motor": selectedMotorId.value,
-      "valves": selectedValveIds.toList(),
-      "valve_group": selectedGroupId.value,
-      "start_date": startDate.value!.toIso8601String().split('T').first,
-      "end_date": endDate.value!.toIso8601String().split('T').first,
-      "start_times": [formatTimeOfDay(startTime.value!)],
-      "end_times": [formatTimeOfDay(endTime.value!)],
-    });
-
-    final response = await http.post(url, headers: headers, body: body);
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      Get.snackbar("Success", "Schedule submitted");
-    } else {
-      Get.snackbar("Error", response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Get.snackbar("Success", "Schedule submitted successfully");
+        fetchSchedules(); // Refresh list
+      } else {
+        Get.snackbar("Something went wrong", response.body);
+      }
+    } catch (e) {
+      Get.snackbar("Something went wrong", "Failed to submit schedule: $e");
     }
   }
-
-  String formatTimeOfDay(TimeOfDay time) {
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00";
-  }
-
-  // var schedules = <Schedule>[].obs;
 
   Future<void> fetchSchedules() async {
     try {
       isLoading.value = true;
-      final url = Uri.parse(
-        'http://192.168.20.29:8002/api/farm-schedule/$farmId/',
+      final list = await ApiService.fetchSchedules(
+        farmId: farmId,
+        token: token,
       );
-      log("$url");
-      final headers = {
-        'Authorization': 'Token $token',
-        'Content-Type': 'application/json',
-      };
-
-      final response = await http.get(url, headers: headers);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        schedules.value = data.map((e) => Schedule.fromJson(e)).toList();
-      } else {
-        throw Exception('Failed to load schedules: ${response.body}');
-      }
+      schedules.value = list;
     } catch (e) {
-      print("Error loading schedules: $e");
-      Get.snackbar("Error", "Failed to load schedule list");
+      Get.snackbar("Something went wrong", "Failed to fetch schedules: $e");
     } finally {
       isLoading.value = false;
     }
   }
+
+  void resetForm() {
+    selectedMotorId.value = null;
+    selectedGroupId.value = null;
+    startDate.value = null;
+    endDate.value = null;
+    startTime.value = null;
+    endTime.value = null;
+    selectedValveIds.clear();
+    editingScheduleId.value = null;
+  }
+
+  Future<void> editSchedule(int scheduleId) async {
+    if (selectedMotorId.value == null ||
+        (selectedValveIds.isEmpty && selectedGroupId.value == null) ||
+        startDate.value == null ||
+        endDate.value == null ||
+        startTime.value == null ||
+        endTime.value == null) {
+      Get.snackbar("Missing data", "Please fill all required fields");
+      return;
+    }
+
+    try {
+      final message = await ApiService.updateSchedule(
+        scheduleId: scheduleId,
+        token: token, // your auth token
+        farmId: farmId, // your selected farm ID
+        motorId: selectedMotorId.value!,
+        valves: selectedValveIds.toList(),
+        valveGroupId: selectedGroupId.value,
+        startDate: startDate.value!.toIso8601String().split('T').first,
+        endDate: endDate.value!.toIso8601String().split('T').first,
+        startTimes: [formatTimeOfDay(startTime.value!)],
+        endTimes: [formatTimeOfDay(endTime.value!)],
+      );
+
+      Get.snackbar("Updated", message);
+      await fetchSchedules(); // refresh after update
+    } catch (e) {
+      Get.snackbar("Something went wrong", e.toString());
+    }
+  }
+
+  void loadScheduleForEdit(Schedule schedule) {
+    selectedMotorId.value = schedule.motorId;
+    selectedGroupId.value = schedule.valveGroupId;
+    selectedValveIds.value = schedule.valves.toSet();
+
+    startDate.value = DateTime.parse(schedule.startDate);
+    endDate.value = DateTime.parse(schedule.endDate);
+
+    final startParts = schedule.startTime.split(":");
+    final endParts = schedule.endTime.split(":");
+
+    startTime.value = TimeOfDay(
+      hour: int.parse(startParts[0]),
+      minute: int.parse(startParts[1]),
+    );
+    endTime.value = TimeOfDay(
+      hour: int.parse(endParts[0]),
+      minute: int.parse(endParts[1]),
+    );
+
+    editingScheduleId.value = schedule.id;
+  }
+
+Future<void> deleteSchedule(int scheduleId) async {
+    try {
+      isLoading.value = true;
+      final deleted = await ApiService.deleteSchedule(token, scheduleId);
+
+      if (deleted) {
+        Get.snackbar("Deleted", "Schedule deleted successfully");
+        await fetchSchedules();
+      }
+    } catch (e) {
+      Get.snackbar("Something went wrong", e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> toggleSkipStatus(int scheduleId) async {
+  try {
+    await ApiService.toggleSkipStatus(
+      token: token,
+      scheduleId: scheduleId,
+    );
+    Get.snackbar("Success", "Skip status updated successfully");
+    await fetchSchedules(); // refresh the list
+  } catch (e) {
+    Get.snackbar("Something went wrong", e.toString());
+  }
+}
+
+
 }

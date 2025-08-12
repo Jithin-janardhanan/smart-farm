@@ -20,12 +20,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigate() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
     await Future.delayed(const Duration(seconds: 1)); // optional splash delay
 
-    if (isLoggedIn) {
-      Get.off(() => HomePage(token: ''));
+    if (isLoggedIn && token != null && token.isNotEmpty) {
+      Get.off(() => HomePage(token: token));
     } else {
       Get.off(() => LoginPage());
     }

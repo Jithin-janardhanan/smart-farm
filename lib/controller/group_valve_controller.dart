@@ -73,6 +73,7 @@
 
 // }
 // create_valve_group_controller.dart
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/model/create_group.dart';
@@ -83,12 +84,25 @@ class CreateValveGroupController extends GetxController {
 
   var groupName = ''.obs;
   var selectedValveIds = <int>{}.obs;
+  late TextEditingController groupNameController;
 
   var isSubmitting = false.obs;
   var isLoadingGroups = false.obs;
   var showForm = false.obs;
 
   var editingGroup = Rxn<ValveGroup>();
+ @override
+  void onInit() {
+    super.onInit();
+    groupNameController = TextEditingController();
+
+    // Keep the observable in sync with the controller's text
+    groupNameController.addListener(() {
+      groupName.value = groupNameController.text;
+    });
+  }
+
+  
 
   // Fetch list
   Future<void> fetchGroupedValves(String token, int farmId) async {
@@ -131,7 +145,7 @@ class CreateValveGroupController extends GetxController {
       }
       onResult(created);
     } catch (e) {
-      print("Create Group Error: $e");
+     
       onResult(false);
     }
 
@@ -155,7 +169,7 @@ class CreateValveGroupController extends GetxController {
       }
       onResult(success);
     } catch (e) {
-      print("Delete Group Error: $e");
+     
       onResult(false);
     }
     isSubmitting.value = false;
@@ -192,7 +206,7 @@ class CreateValveGroupController extends GetxController {
 
       onResult(success);
     } catch (e) {
-      print("Update Group Error: $e");
+      debugPrint("Update Group Error: $e");
       onResult(false);
     }
 
@@ -200,15 +214,17 @@ class CreateValveGroupController extends GetxController {
   }
 
   // Edit mode
-  void startEditingGroup(ValveGroup group) {
+   void startEditingGroup(ValveGroup group) {
     editingGroup.value = group;
     groupName.value = group.name;
+    groupNameController.text = group.name; // <-- prefill
     selectedValveIds.value = group.valves.map((v) => v.id).toSet();
     showForm.value = true;
   }
 
-  void clearForm() {
+   void clearForm() {
     groupName.value = '';
+    groupNameController.clear(); // <-- clear controller text
     selectedValveIds.clear();
     editingGroup.value = null;
     showForm.value = false;

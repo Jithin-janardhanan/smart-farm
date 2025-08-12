@@ -63,7 +63,7 @@ class LoginController extends GetxController {
     // Validate form before proceeding
     if (!formKey.currentState!.validate()) {
       Get.snackbar(
-        "Validation Error",
+        "Validation Something went wrong",
         "Please fix the errors above",
         backgroundColor: Colors.red.shade50,
         colorText: Colors.red.shade800,
@@ -98,7 +98,7 @@ class LoginController extends GetxController {
         backgroundColor: Colors.green.shade50,
         colorText: Colors.green.shade800,
         icon: Icon(Icons.check_circle_outline, color: Colors.green.shade800),
-        snackPosition: SnackPosition.TOP,
+        snackPosition: SnackPosition.BOTTOM,
       );
       log("Token saved: ${user.token}");
     } catch (e) {
@@ -109,7 +109,7 @@ class LoginController extends GetxController {
         backgroundColor: Colors.red.shade50,
         colorText: Colors.red.shade800,
         icon: Icon(Icons.error_outline, color: Colors.red.shade800),
-        snackPosition: SnackPosition.TOP,
+        snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoading.value = false;

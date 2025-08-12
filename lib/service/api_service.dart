@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
+import 'package:smartfarm/model/power_supply.dart';
 import 'package:smartfarm/model/profile_model.dart';
+import 'package:smartfarm/model/schedule_model.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/model/create_group.dart';
@@ -51,6 +53,26 @@ class ApiService {
     }
   }
 
+  //powesupply
+
+  static Future<LiveData> getLiveData(String token, int farmId) async {
+    final url = Uri.parse('$baseUrl/farms/$farmId/live-data/');
+
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return LiveData.fromJson(data);
+    } else {
+      throw Exception("Failed to fetch live data");
+    }
+  }
+
   // UPDATE PROFILE
   static Future<bool> updateFarmerProfile(
     String token,
@@ -85,6 +107,20 @@ class ApiService {
       return jsonList.map((e) => Farm.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load farms: ${response.body}');
+    }
+  }
+
+  static Future<void> emergencyStop(String token, int farmId) async {
+    final url = Uri.parse('$baseUrl/farms/$farmId/shutdown/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.post(url, headers: headers);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to stop farm: ${response.body}');
     }
   }
 
@@ -347,6 +383,136 @@ class ApiService {
       return data['message'] ?? 'Valve $status successful';
     } else {
       throw Exception('Failed to toggle valve: ${response.reasonPhrase}');
+    }
+  }
+  //create new schedule
+
+  static Future<http.Response> submitSchedule({
+    required String token,
+    required int farmId,
+    required int motorId,
+    required List<int> valves,
+    int? valveGroupId,
+    required String startDate,
+    required String endDate,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final url = Uri.parse('$baseUrl/schedules/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final body = json.encode({
+      "farm": farmId,
+      "motor": motorId,
+      "valves": valves,
+      "valve_group": valveGroupId,
+      "start_date": startDate,
+      "end_date": endDate,
+      "start_times": [startTime],
+      "end_times": [endTime],
+    });
+
+    return await http.post(url, headers: headers, body: body);
+  }
+  // fetch scheduled events
+
+  static Future<List<Schedule>> fetchSchedules({
+    required int farmId,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/farm-schedule/$farmId/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data.map((json) => Schedule.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load schedules: ${response.body}');
+    }
+  }
+
+  //Edit scheduled Events
+
+  static Future<String> updateSchedule({
+    required int scheduleId,
+    required int farmId,
+    required String token,
+    required int motorId,
+    required List<int> valves,
+    int? valveGroupId,
+    required String startDate,
+    required String endDate,
+    required List<String> startTimes,
+    required List<String> endTimes,
+  }) async {
+    final url = Uri.parse('$baseUrl/schedules/$scheduleId/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final body = json.encode({
+      "farm": farmId,
+      "motor": motorId,
+      "valves": valves,
+      "valve_group": valveGroupId,
+      "start_date": startDate,
+      "end_date": endDate,
+      "start_times": startTimes,
+      "end_times": endTimes,
+    });
+
+    final response = await http.put(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      return "Schedule updated successfully";
+    } else {
+      throw Exception('Failed to update schedule: ${response.body}');
+    }
+  }
+  //skip schedules
+
+  static Future<void> toggleSkipStatus({
+    required String token,
+    required int scheduleId,
+  }) async {
+    var url = Uri.parse('$baseUrl/schedules/skip/$scheduleId/');
+    var headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.post(url, headers: headers);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update skip status: ${response.body}');
+    }
+  }
+
+  //Delete schedules
+
+  static Future<bool> deleteSchedule(String token, int scheduleId) async {
+    final url = Uri.parse('$baseUrl/schedules/$scheduleId/');
+
+    final response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return true; // Deleted successfully
+    } else {
+      throw Exception('Failed to delete schedule: ${response.body}');
     }
   }
 

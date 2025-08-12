@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:smartfarm/model/colors_model.dart';
 import '../controller/profile_controller.dart';
-
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -16,23 +16,25 @@ class ProfileView extends StatelessWidget {
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Light gray-white background
+      backgroundColor: AppColors.background, // Light gray-white background
       appBar: AppBar(
-        title: Text(
-          'Farmer Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: isTablet ? 22 : 18,
+        title: Center(
+          child: Text(
+            'Farmer Profile',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.white,
+              fontSize: isTablet ? 22 : 18,
+            ),
           ),
         ),
-        backgroundColor: const Color(0xFF2E7D32), // Standard green
+        backgroundColor: AppColors.primaryGreen, // Standard green
         elevation: 3,
-        shadowColor: const Color(0xFF2E7D32).withOpacity(0.3),
+        shadowColor: AppColors.primaryGreen.withOpacity(0.3),
         actions: [
           IconButton(
             onPressed: () => _showLogoutDialog(context, controller),
-            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            icon: const Icon(Icons.logout_rounded, color: AppColors.white),
             iconSize: isTablet ? 28 : 24,
           ),
         ],
@@ -44,14 +46,14 @@ class ProfileView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  color: const Color(0xFF4CAF50),
+                  color: AppColors.secondaryGreen,
                   strokeWidth: isTablet ? 4 : 3,
                 ),
                 SizedBox(height: isTablet ? 20 : 16),
                 Text(
                   'Loading profile...',
                   style: TextStyle(
-                    color: const Color(0xFF2E7D32),
+                    color: AppColors.primaryGreen,
                     fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -107,8 +109,8 @@ class ProfileView extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF2E7D32),
-            Color(0xFF4CAF50),
+            AppColors.primaryGreen,
+            AppColors.secondaryGreen,
           ], // Standard green gradient
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -116,7 +118,7 @@ class ProfileView extends StatelessWidget {
         borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.3),
+            color: AppColors.primaryGreen.withOpacity(0.3),
             blurRadius: isTablet ? 20 : 15,
             offset: const Offset(0, 8),
           ),
@@ -127,11 +129,11 @@ class ProfileView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(isTablet ? 24 : 20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(isTablet ? 70 : 60),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.black.withOpacity(0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -140,7 +142,7 @@ class ProfileView extends StatelessWidget {
             child: Icon(
               Icons.agriculture_rounded,
               size: isTablet ? 70 : 55,
-              color: const Color(0xFF2E7D32),
+              color: AppColors.primaryGreen,
             ),
           ),
           SizedBox(height: isTablet ? 20 : 16),
@@ -150,10 +152,10 @@ class ProfileView extends StatelessWidget {
               style: TextStyle(
                 fontSize: isTablet ? 28 : 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.white,
                 shadows: const [
                   Shadow(
-                    color: Colors.black26,
+                    color: AppColors.black,
                     offset: Offset(0, 2),
                     blurRadius: 4,
                   ),
@@ -168,13 +170,13 @@ class ProfileView extends StatelessWidget {
               vertical: isTablet ? 10 : 8,
             ),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: AppColors.white.withOpacity(0.25),
               borderRadius: BorderRadius.circular(25),
             ),
             child: Text(
               '🌱 Smart Farmer',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontSize: isTablet ? 18 : 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -357,12 +359,12 @@ class ProfileView extends StatelessWidget {
         vertical: isTablet ? 14 : 12,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFF4CAF50), width: 2),
+        border: Border.all(color: AppColors.secondaryGreen, width: 2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withOpacity(0.15),
+            color: AppColors.secondaryGreen.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -373,7 +375,7 @@ class ProfileView extends StatelessWidget {
         style: TextStyle(
           fontSize: isTablet ? 20 : 17,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFF2E7D32),
+          color: AppColors.primaryGreen,
         ),
       ),
     );
@@ -392,7 +394,7 @@ class ProfileView extends StatelessWidget {
         borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.1),
+            color: AppColors.primaryGreen.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -403,7 +405,7 @@ class ProfileView extends StatelessWidget {
         keyboardType: keyboardType,
         validator: validator,
         style: TextStyle(
-          color: const Color(0xFF1B5E20),
+          color: AppColors.black,
           fontSize: isTablet ? 18 : 16,
           fontWeight: FontWeight.w500,
         ),
@@ -411,38 +413,41 @@ class ProfileView extends StatelessWidget {
           labelText: label,
           prefixIcon: Icon(
             icon,
-            color: const Color(0xFF4CAF50),
+            color: AppColors.black,
             size: isTablet ? 26 : 22,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: Color(0xFF81C784)),
+            borderSide: const BorderSide(color: AppColors.lightGreen),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: Color(0xFF81C784), width: 1.5),
+            borderSide: const BorderSide(color: AppColors.black, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2.5),
+            borderSide: const BorderSide(
+              color: AppColors.primaryGreen,
+              width: 2.5,
+            ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 1.5),
+            borderSide: const BorderSide(color: AppColors.errorRed, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2.5),
+            borderSide: const BorderSide(color: AppColors.errorRed, width: 2.5),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.white,
           labelStyle: TextStyle(
-            color: const Color(0xFF4CAF50),
+            color: AppColors.secondaryGreen,
             fontSize: isTablet ? 17 : 15,
             fontWeight: FontWeight.w500,
           ),
           errorStyle: TextStyle(
-            color: const Color(0xFFD32F2F),
+            color: AppColors.errorRed,
             fontSize: isTablet ? 14 : 13,
             fontWeight: FontWeight.w500,
           ),
@@ -469,14 +474,14 @@ class ProfileView extends StatelessWidget {
       height: isTablet ? 65 : 55,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+          colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.4),
+            color: AppColors.primaryGreen.withOpacity(0.4),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -496,7 +501,7 @@ class ProfileView extends StatelessWidget {
           children: [
             Icon(
               Icons.eco_rounded,
-              color: Colors.white,
+              color: AppColors.white,
               size: isTablet ? 26 : 22,
             ),
             SizedBox(width: isTablet ? 12 : 10),
@@ -505,7 +510,7 @@ class ProfileView extends StatelessWidget {
               style: TextStyle(
                 fontSize: isTablet ? 20 : 17,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
           ],
@@ -524,7 +529,7 @@ class ProfileView extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
           ),
@@ -532,14 +537,14 @@ class ProfileView extends StatelessWidget {
             children: [
               Icon(
                 Icons.update_rounded,
-                color: const Color(0xFF4CAF50),
+                color: AppColors.secondaryGreen,
                 size: isTablet ? 32 : 28,
               ),
               SizedBox(width: isTablet ? 16 : 12),
               Text(
                 'Update Profile',
                 style: TextStyle(
-                  color: const Color(0xFF1B5E20),
+                  color: AppColors.darkGreen,
                   fontWeight: FontWeight.bold,
                   fontSize: isTablet ? 22 : 20,
                 ),
@@ -549,7 +554,7 @@ class ProfileView extends StatelessWidget {
           content: Text(
             'Are you sure you want to update your farm profile with the current information?',
             style: TextStyle(
-              color: const Color(0xFF424242),
+              color: AppColors.textGrey,
               fontSize: isTablet ? 18 : 16,
               height: 1.4,
             ),
@@ -570,7 +575,7 @@ class ProfileView extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+                  colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
                 ),
                 borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
               ),
@@ -593,7 +598,7 @@ class ProfileView extends StatelessWidget {
                 child: Text(
                   'Update',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: isTablet ? 18 : 16,
                   ),
@@ -613,7 +618,7 @@ class ProfileView extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
           ),
@@ -621,14 +626,14 @@ class ProfileView extends StatelessWidget {
             children: [
               Icon(
                 Icons.logout_rounded,
-                color: const Color(0xFFD32F2F),
+                color: AppColors.errorRed,
                 size: isTablet ? 32 : 28,
               ),
               SizedBox(width: isTablet ? 16 : 12),
               Text(
                 'Logout',
                 style: TextStyle(
-                  color: const Color(0xFF1B5E20),
+                  color: AppColors.darkGreen,
                   fontWeight: FontWeight.bold,
                   fontSize: isTablet ? 22 : 20,
                 ),
@@ -638,7 +643,7 @@ class ProfileView extends StatelessWidget {
           content: Text(
             'Are you sure you want to logout from Smart Farm? You will need to login again to access your account.',
             style: TextStyle(
-              color: const Color(0xFF424242),
+              color: AppColors.textGrey,
               fontSize: isTablet ? 18 : 16,
               height: 1.4,
             ),
@@ -658,7 +663,7 @@ class ProfileView extends StatelessWidget {
             SizedBox(width: isTablet ? 12 : 8),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFD32F2F),
+                color: AppColors.errorRed,
                 borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
               ),
               child: ElevatedButton(
@@ -680,7 +685,7 @@ class ProfileView extends StatelessWidget {
                 child: Text(
                   'Logout',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: isTablet ? 18 : 16,
                   ),
@@ -693,4 +698,3 @@ class ProfileView extends StatelessWidget {
     );
   }
 }
-

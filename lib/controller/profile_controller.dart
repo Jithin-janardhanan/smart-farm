@@ -247,7 +247,7 @@ class ProfileController extends GetxController {
       pincodecrl.text = profile.pincode;
     } catch (e) {
       log('message: $e');
-      Get.snackbar("Error", e.toString());
+      Get.snackbar("Something went wrong", e.toString());
     } finally {
       isLoading.value = false;
     }
@@ -256,8 +256,8 @@ class ProfileController extends GetxController {
   Future<void> updateProfile() async {
     if (!formKey.currentState!.validate()) {
       Get.snackbar(
-        "Validation Error",
-        "Please fix all errors before submitting",
+        "Check all field",
+        "Check all before submitting",
         backgroundColor: Colors.redAccent.withOpacity(0.9),
         colorText: Colors.white,
       );
@@ -296,7 +296,7 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       Get.snackbar(
-        "Error",
+        "Something went wrong",
         e.toString(),
         backgroundColor: Colors.redAccent.withOpacity(0.9),
         colorText: Colors.white,

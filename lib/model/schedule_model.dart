@@ -1,4 +1,3 @@
-
 class Schedule {
   final int id;
   final String batchId;
@@ -6,10 +5,12 @@ class Schedule {
   final String endDate;
   final String startTime;
   final String endTime;
+
   final bool isActive;
   final int motorId;
   final int? valveGroupId;
   final List<int> valves;
+  final bool skipStatus; // <-- new
 
   Schedule({
     required this.id,
@@ -22,6 +23,7 @@ class Schedule {
     required this.motorId,
     required this.valveGroupId,
     required this.valves,
+    required this.skipStatus,
   });
 
   factory Schedule.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Schedule {
       motorId: json['motor'],
       valveGroupId: json['valve_group'],
       valves: List<int>.from(json['valves']),
+      skipStatus: json['skip_status'] ?? false,
     );
   }
 }

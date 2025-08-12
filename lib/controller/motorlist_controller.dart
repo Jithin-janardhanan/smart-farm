@@ -1,8 +1,9 @@
-import 'dart:convert';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/motor_model.dart';
+import 'package:smartfarm/model/power_supply.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/service/api_service.dart';
@@ -14,7 +15,9 @@ class MotorController extends GetxController {
   var outValves = <Valve>[].obs;
   var groupedValves = <ValveGroup>[].obs;
   var groupToggleStates = <int, RxBool>{}.obs;
-
+  var liveData = Rxn<LiveData>();
+  var isLiveDataLoading = false.obs;
+  Timer? _liveDataTimer;
   var isLoading = false.obs;
 
   var ungroupedValves = <Valve>[].obs;
@@ -36,7 +39,7 @@ class MotorController extends GetxController {
       await fetchGroupedValves(token, farmId);
       await fetchUngroupedValves(token, farmId);
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch motors and valves");
+      Get.snackbar("Something went wrong", "Failed to fetch motors and valves");
     } finally {
       isLoading.value = false;
     }
@@ -49,20 +52,24 @@ class MotorController extends GetxController {
     required String token,
   }) async {
     try {
-      isLoading.value = true;
-      String message = await ApiService.controlMotor(
+      final message = await ApiService.controlMotor(
         motorId: motorId,
         status: status,
         token: token,
       );
 
-      // Refresh the motor list to reflect new status
-      await fetchMotorsAndValves(farmId, token);
-      Get.snackbar("Success", message);
+      // update locally without re-fetching
+      final motor =
+          inMotors.firstWhereOrNull((m) => m.id == motorId) ??
+          outMotors.firstWhereOrNull((m) => m.id == motorId);
+      if (motor != null) {
+        motor.status.value = status;
+      }
+
+      Get.snackbar("Success", message,  colorText: Colors.green.shade800,
+      snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      Get.snackbar("Error", "Failed to toggle motor");
-    } finally {
-      isLoading.value = false;
+      Get.snackbar("Something went wrong", "Failed to toggle motor",colorText: Colors.red.shade800,snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -82,7 +89,7 @@ class MotorController extends GetxController {
         ); // assuming isOn maps to `is_on`
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to load grouped valves");
+      Get.snackbar("Something went wrong", "Failed to load grouped valves",colorText: Colors.red.shade800,snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoadingGroups.value = false;
     }
@@ -109,7 +116,7 @@ class MotorController extends GetxController {
       await fetchGroupedValves(token, farmId); // ✅ Fix: pass farmId here
       Get.snackbar("Success", msg);
     } catch (e) {
-      Get.snackbar("Error", "Failed to toggle valve group");
+      Get.snackbar("Something went wrong", "Failed to toggle valve group");
     } finally {
       isLoadingGroups.value = false;
     }
@@ -122,7 +129,7 @@ class MotorController extends GetxController {
       final valves = await ApiService.getUngroupedValves(token, farmId);
       ungroupedValves.value = valves;
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch ungrouped valves");
+      Get.snackbar("Something went wrong", "Failed to fetch ungrouped valves");
     }
   }
   // individual Valve Control
@@ -148,10 +155,48 @@ class MotorController extends GetxController {
 
       Get.snackbar("Success", message);
     } catch (e) {
-      Get.snackbar("Error", "Failed to toggle valve");
-      print("Error: $e");
+      Get.snackbar("Something went wrong", "Failed to toggle valve");
+      print("Something went wrong: $e");
     } finally {
       isLoading.value = false;
     }
+  }
+
+  //powersupply
+
+  Future<void> fetchLiveData(String token, int farmId) async {
+    try {
+      isLiveDataLoading.value = true;
+      final data = await ApiService.getLiveData(token, farmId);
+      liveData.value = data;
+    } catch (e) {
+      print("Live data fetch error: $e");
+    } finally {
+      isLiveDataLoading.value = false;
+    }
+  }
+
+  void startLiveDataUpdates(String token, int farmId, {Duration interval = const Duration(seconds: 5)}) {
+    // Stop any existing timer first
+    _liveDataTimer?.cancel();
+
+    // Start periodic updates
+    _liveDataTimer = Timer.periodic(interval, (_) {
+      fetchLiveData(token, farmId);
+    });
+
+    // Initial fetch right away
+    fetchLiveData(token, farmId);
+  }
+
+  void stopLiveDataUpdates() {
+    _liveDataTimer?.cancel();
+    _liveDataTimer = null;
+  }
+
+  @override
+  void onClose() {
+    stopLiveDataUpdates();
+    super.onClose();
   }
 }
