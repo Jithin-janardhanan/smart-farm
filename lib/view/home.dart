@@ -89,7 +89,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
-import 'package:smartfarm/view/profile.dart';
+import 'package:smartfarm/view/curved_appbar.dart';
 import 'package:smartfarm/view/tab_controller.dart';
 
 class HomePage extends StatelessWidget {
@@ -113,23 +113,24 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.green[600],
-        foregroundColor: Colors.white,
-        centerTitle: true,
-        title: const Text(
-          'Smart Farm',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => Get.to(() => ProfileView()),
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
-          ),
-        ],
-      ),
+      appBar: CurvedAppBar(),
+      // appBar: AppBar(
+      //   elevation: 0,
+      //   backgroundColor: Colors.white,
+      //   foregroundColor: Colors.green[800],
+      //   centerTitle: true,
+      //   title: const Text(
+      //     'Smart Farm',
+      //     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       onPressed: () => Get.to(() => ProfileView()),
+      //       icon: const Icon(Icons.person_outline),
+      //       tooltip: 'Profile',
+      //     ),
+      //   ],
+      // ),
       body: Obx(() {
         if (farmController.isLoading.value) {
           return const Center(
@@ -171,57 +172,101 @@ class HomePage extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: farmController.fetchFarms,
           color: Colors.green,
-          child: ListView.builder(
+          child: GridView.builder(
             padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.85,
+            ),
             itemCount: farmController.farms.length,
             itemBuilder: (context, index) {
               final farm = farmController.farms[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  onTap: () => navigateToMotors(farm.id),
-                  leading: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Icon(
-                      Icons.agriculture,
-                      color: Colors.green[600],
-                      size: 24,
-                    ),
+              return GestureDetector(
+                onTap: () => navigateToMotors(farm.id),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  title: Text(
-                    farm.farmName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Header with icon and emergency button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.green[100],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Icon(
+                                Icons.agriculture,
+                                color: Colors.green[600],
+                                size: 20,
+                              ),
+                            ),
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: Icon(
+                                  Icons.power_settings_new,
+                                  color: Colors.red[600],
+                                  size: 16,
+                                ),
+                                tooltip: "Emergency Stop",
+                                onPressed: () {
+                                  _showEmergencyDialog(
+                                    context,
+                                    farm.farmName,
+                                    () {
+                                      farmController.triggerEmergencyStop(
+                                        farm.id,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Farm name
+                        Text(
+                          farm.farmName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+                        // Location
                         Row(
                           children: [
                             Icon(
                               Icons.location_on_outlined,
-                              size: 16,
+                              size: 14,
                               color: Colors.grey[600],
                             ),
                             const SizedBox(width: 4),
@@ -230,18 +275,21 @@ class HomePage extends StatelessWidget {
                                 farm.location,
                                 style: TextStyle(
                                   color: Colors.grey[600],
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
+                        // Farm area
                         Row(
                           children: [
                             Icon(
                               Icons.landscape_outlined,
-                              size: 16,
+                              size: 14,
                               color: Colors.grey[600],
                             ),
                             const SizedBox(width: 4),
@@ -249,33 +297,32 @@ class HomePage extends StatelessWidget {
                               '${farm.farmArea} acres',
                               style: TextStyle(
                                 color: Colors.grey[600],
-                                fontSize: 14,
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
+                        const Spacer(),
+                        // Status indicator
+                        Container(
+                          width: double.infinity,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Active',
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                  trailing: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.power_settings_new,
-                        color: Colors.red[600],
-                        size: 20,
-                      ),
-                      tooltip: "Emergency Stop",
-                      onPressed: () {
-                        _showEmergencyDialog(context, farm.farmName, () {
-                          farmController.triggerEmergencyStop(farm.id);
-                        });
-                      },
                     ),
                   ),
                 ),

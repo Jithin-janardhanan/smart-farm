@@ -1,3 +1,390 @@
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:smartfarm/controller/motorlist_controller.dart';
+// import 'package:smartfarm/model/power_supply.dart';
+
+// class MotorListTab extends StatelessWidget {
+//   final int farmId;
+//   final String token;
+
+//   MotorListTab({super.key, required this.farmId, required this.token});
+
+//   final MotorController controller = Get.find<MotorController>();
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // Start live data updates only once
+//     controller.startLiveDataUpdates(token, farmId);
+//     return Obx(() {
+//       if (controller.isLoading.value) {
+//         return const Center(child: CircularProgressIndicator());
+//       }
+
+//       return SingleChildScrollView(
+//         padding: const EdgeInsets.all(12),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             // Inside MotorListTab build() -> before "In Motors" section
+//             Obx(() {
+//               if (controller.isLiveDataLoading.value &&
+//                   controller.liveData.value == null) {
+//                 return const Center(child: CircularProgressIndicator());
+//               }
+
+//               // Use default zero data if null
+//               final data =
+//                   controller.liveData.value ??
+//                   LiveData(
+//                     id: 0,
+//                     farmName: "Farm $farmId",
+//                     voltage: [0.0, 0.0, 0.0],
+//                     currentR: 0.0,
+//                     currentY: 0.0,
+//                     currentB: 0.0,
+//                   );
+
+//               final isMotorRunning =
+//                   !(data.voltage.every((v) => v == 0.0) &&
+//                       data.currentR == 0.0 &&
+//                       data.currentY == 0.0 &&
+//                       data.currentB == 0.0);
+
+//               return Column(
+//                 children: [
+//                   Card(
+//                     margin: const EdgeInsets.only(bottom: 16),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(12),
+//                       child: Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Text(
+//                             "Live Data - ${data.farmName}",
+//                             style: const TextStyle(
+//                               fontWeight: FontWeight.bold,
+//                               fontSize: 16,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 8),
+//                           if (!isMotorRunning)
+//                             const Text(
+//                               "Motor is OFF",
+//                               style: TextStyle(
+//                                 color: Colors.red,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           Text(
+//                             "Voltage: ${data.voltage.map((v) => '${v}V').join(', ')}",
+//                           ),
+//                           Text("Current R: ${data.currentR} A"),
+//                           Text("Current Y: ${data.currentY} A"),
+//                           Text("Current B: ${data.currentB} A"),
+//                           const SizedBox(height: 8),
+//                           ElevatedButton.icon(
+//                             onPressed: () =>
+//                                 controller.fetchLiveData(token, farmId),
+//                             icon: const Icon(Icons.refresh),
+//                             label: const Text("Refresh"),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   ),
+//                   // You can add rest of your UI here
+//                 ],
+//               );
+//             }),
+
+//             Text(
+//               "In Motors",
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//             ),
+
+//             ...controller.inMotors.map(
+//               (motor) => Card(
+//                 child: Obx(
+//                   () => ListTile(
+//                     title: Text(motor.name),
+//                     subtitle: Text(
+//                       'Lora: ${motor.loraId}, Status: ${motor.status.value}',
+//                     ),
+//                     trailing: ElevatedButton(
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: motor.status.value == "ON"
+//                             ? Colors.red
+//                             : Colors.green,
+//                       ),
+//                       onPressed: () {
+//                         final newStatus = motor.status.value == "ON"
+//                             ? "OFF"
+//                             : "ON";
+//                         controller.toggleMotor(
+//                           motorId: motor.id,
+//                           status: newStatus,
+//                           farmId: farmId,
+//                           token: token,
+//                         );
+//                       },
+//                       child: Text(
+//                         motor.status.value == "ON" ? "Turn OFF" : "Turn ON",
+//                         style: const TextStyle(color: Colors.white),
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ),
+
+//             SizedBox(height: 16),
+//             Text(
+//               "Out Motors",
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//             ),
+//             ...controller.outMotors.map(
+//               (motor) => Card(
+//                 child: ListTile(
+//                   title: Text(motor.name),
+//                   subtitle: Text(
+//                     'Lora: ${motor.loraId}, Status: ${motor.status}',
+//                   ),
+//                   trailing: ElevatedButton(
+//                     style: ElevatedButton.styleFrom(
+//                       backgroundColor: motor.status == "ON"
+//                           ? Colors.red
+//                           : Colors.green,
+//                     ),
+//                     onPressed: () {
+//                       final newStatus = motor.status == "ON" ? "OFF" : "ON";
+//                       controller.toggleMotor(
+//                         motorId: motor.id,
+//                         status: newStatus,
+//                         farmId: farmId,
+//                         token: token,
+//                       );
+//                     },
+//                     child: Text(
+//                       motor.status == "ON" ? "Turn OFF" : "Turn ON",
+//                       style: TextStyle(color: Colors.white),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ),
+
+//             SizedBox(height: 16),
+//             Text(
+//               "Grouped Valves",
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//             ),
+
+//             Obx(() {
+//               final groups = controller.groupedValves;
+//               return Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: List.generate(groups.length, (i) {
+//                   final group = groups[i];
+//                   return ExpansionTile(
+//                     title: Row(
+//                       children: [
+//                         Expanded(
+//                           child: Text(
+//                             "${group.name} (ID: ${group.id})",
+//                             style: TextStyle(fontWeight: FontWeight.w600),
+//                           ),
+//                         ),
+//                         Obx(() {
+//                           return Switch(
+//                             value:
+//                                 controller.groupToggleStates[group.id]?.value ??
+//                                 false,
+//                             onChanged: (_) {
+//                               controller.toggleValveGroup(
+//                                 groupId: group.id,
+//                                 token: token,
+//                                 farmId: farmId,
+//                               );
+//                             },
+//                           );
+//                         }),
+//                       ],
+//                     ),
+//                     children: group.valves.map<Widget>((valve) {
+//                       return Card(
+//                         margin: EdgeInsets.symmetric(
+//                           vertical: 4,
+//                           horizontal: 12,
+//                         ),
+//                         elevation: 2,
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(8),
+//                         ),
+//                         child: Padding(
+//                           padding: const EdgeInsets.symmetric(
+//                             vertical: 8,
+//                             horizontal: 16,
+//                           ),
+//                           child: Row(
+//                             children: [
+//                               Expanded(
+//                                 child: Column(
+//                                   crossAxisAlignment: CrossAxisAlignment.start,
+//                                   children: [
+//                                     Text(
+//                                       valve.name,
+//                                       style: TextStyle(
+//                                         fontSize: 16,
+//                                         fontWeight: FontWeight.w600,
+//                                       ),
+//                                     ),
+//                                     Text("Lora: ${valve.loraId}"),
+//                                     Text(
+//                                       valve.status == 'ON'
+//                                           ? 'Status: Opened'
+//                                           : 'Status: Closed',
+//                                       style: TextStyle(
+//                                         color: valve.status == 'ON'
+//                                             ? Colors.green
+//                                             : Colors.red,
+//                                       ),
+//                                     ),
+//                                   ],
+//                                 ),
+//                               ),
+//                               IconButton(
+//                                 iconSize: 48,
+//                                 icon: Icon(
+//                                   valve.status == "ON"
+//                                       ? Icons.toggle_on
+//                                       : Icons.toggle_off,
+//                                   color: valve.status == "ON"
+//                                       ? Colors.green
+//                                       : Colors.grey,
+//                                 ),
+//                                 onPressed: () {
+//                                   final newStatus = valve.status == "ON"
+//                                       ? "OFF"
+//                                       : "ON";
+//                                   controller.toggleValve(
+//                                     valveId: valve.id,
+//                                     status: newStatus,
+//                                     token: token,
+//                                     farmId: farmId,
+//                                   );
+//                                 },
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       );
+//                     }).toList(),
+//                   );
+//                 }),
+//               );
+//             }),
+
+//             SizedBox(height: 16),
+//             Text(
+//               "Ungrouped Valves",
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//             ),
+
+//             Obx(() {
+//               if (controller.ungroupedValves.isEmpty) {
+//                 return Text("No ungrouped valves found.");
+//               }
+
+//               return Wrap(
+//                 spacing: 12,
+//                 runSpacing: 12,
+//                 children: controller.ungroupedValves.map((valve) {
+//                   return Container(
+//                     width: MediaQuery.of(context).size.width / 2 - 24,
+//                     padding: EdgeInsets.all(8),
+//                     decoration: BoxDecoration(
+//                       border: Border.all(color: Colors.grey.shade300),
+//                       borderRadius: BorderRadius.circular(12),
+//                       color: Colors.white,
+//                       boxShadow: [
+//                         BoxShadow(
+//                           color: Colors.black12,
+//                           blurRadius: 4,
+//                           offset: Offset(0, 2),
+//                         ),
+//                       ],
+//                     ),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           valve.name,
+//                           style: TextStyle(fontWeight: FontWeight.bold),
+//                           maxLines: 1,
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                         SizedBox(height: 4),
+//                         Text(
+//                           'Lora: ${valve.loraId}',
+//                           style: TextStyle(fontSize: 12),
+//                           maxLines: 1,
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                         SizedBox(height: 1),
+
+//                         Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           children: [
+//                             Text(
+//                               valve.status == "ON" ? "Opened" : "Closed",
+//                               style: TextStyle(
+//                                 color: valve.status == "ON"
+//                                     ? Colors.green
+//                                     : Colors.red,
+//                                 fontWeight: FontWeight.w600,
+//                               ),
+//                             ),
+//                             Align(
+//                               alignment: Alignment.centerRight,
+//                               child: IconButton(
+//                                 icon: Icon(
+//                                   valve.status == "ON"
+//                                       ? Icons.toggle_on
+//                                       : Icons.toggle_off,
+//                                   color: valve.status == "ON"
+//                                       ? Colors.green
+//                                       : Colors.grey,
+//                                   size: 50,
+//                                 ),
+//                                 onPressed: () {
+//                                   final newStatus = valve.status == "ON"
+//                                       ? "OFF"
+//                                       : "ON";
+//                                   controller.toggleValve(
+//                                     valveId: valve.id,
+//                                     status: newStatus,
+//                                     token: token,
+//                                     farmId: farmId,
+//                                   );
+//                                 },
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ],
+//                     ),
+//                   );
+//                 }).toList(),
+//               );
+//             }),
+//             // Paste everything from the original MotorListPage body here
+//             // starting from `Text("In Motors")` to end of "Ungrouped Valves"
+//           ],
+//         ),
+//       );
+//     });
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
@@ -13,375 +400,750 @@ class MotorListTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Start live data updates only once
     controller.startLiveDataUpdates(token, farmId);
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading farm data...'),
+            ],
+          ),
+        );
       }
 
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Inside MotorListTab build() -> before "In Motors" section
-            Obx(() {
-              if (controller.isLiveDataLoading.value &&
-                  controller.liveData.value == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
+      return RefreshIndicator(
+        onRefresh: () async {
+          await controller.fetchLiveData(token, farmId);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildLiveDataCard(),
+              const SizedBox(height: 24),
+              _buildMotorsSection(),
+              const SizedBox(height: 24),
+              _buildValvesSection(),
+            ],
+          ),
+        ),
+      );
+    });
+  }
 
-              // Use default zero data if null
-              final data =
-                  controller.liveData.value ??
-                  LiveData(
-                    id: 0,
-                    farmName: "Farm $farmId",
-                    voltage: [0.0, 0.0, 0.0],
-                    currentR: 0.0,
-                    currentY: 0.0,
-                    currentB: 0.0,
-                  );
+  Widget _buildLiveDataCard() {
+    return Obx(() {
+      if (controller.isLiveDataLoading.value &&
+          controller.liveData.value == null) {
+        return const Card(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        );
+      }
 
-              final isMotorRunning =
-                  !(data.voltage.every((v) => v == 0.0) &&
-                      data.currentR == 0.0 &&
-                      data.currentY == 0.0 &&
-                      data.currentB == 0.0);
+      final data =
+          controller.liveData.value ??
+          LiveData(
+            id: 0,
+            farmName: "Farm $farmId",
+            voltage: [0.0, 0.0, 0.0],
+            currentR: 0.0,
+            currentY: 0.0,
+            currentB: 0.0,
+          );
 
-              return Column(
-                children: [
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
+      final isMotorRunning =
+          !(data.voltage.every((v) => v == 0.0) &&
+              data.currentR == 0.0 &&
+              data.currentY == 0.0 &&
+              data.currentB == 0.0);
+
+      return Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: isMotorRunning
+                  ? [Colors.green.shade50, Colors.green.shade100]
+                  : [Colors.red.shade50, Colors.red.shade100],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isMotorRunning ? Colors.green : Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isMotorRunning ? Icons.power : Icons.power_off,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Live Data - ${data.farmName}",
+                            data.farmName,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 18,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          if (!isMotorRunning)
-                            const Text(
-                              "Motor is OFF",
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           Text(
-                            "Voltage: ${data.voltage.map((v) => '${v}V').join(', ')}",
-                          ),
-                          Text("Current R: ${data.currentR} A"),
-                          Text("Current Y: ${data.currentY} A"),
-                          Text("Current B: ${data.currentB} A"),
-                          const SizedBox(height: 8),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                controller.fetchLiveData(token, farmId),
-                            icon: const Icon(Icons.refresh),
-                            label: const Text("Refresh"),
+                            isMotorRunning
+                                ? "System Running"
+                                : "System Offline",
+                            style: TextStyle(
+                              color: isMotorRunning
+                                  ? Colors.green.shade700
+                                  : Colors.red.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  // You can add rest of your UI here
-                ],
-              );
-            }),
-
-            Text(
-              "In Motors",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            ...controller.inMotors.map(
-              (motor) => Card(
-                child: Obx(
-                  () => ListTile(
-                    title: Text(motor.name),
-                    subtitle: Text(
-                      'Lora: ${motor.loraId}, Status: ${motor.status.value}',
-                    ),
-                    trailing: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: motor.status.value == "ON"
-                            ? Colors.red
-                            : Colors.green,
-                      ),
-                      onPressed: () {
-                        final newStatus = motor.status.value == "ON"
-                            ? "OFF"
-                            : "ON";
-                        controller.toggleMotor(
-                          motorId: motor.id,
-                          status: newStatus,
-                          farmId: farmId,
-                          token: token,
-                        );
-                      },
-                      child: Text(
-                        motor.status.value == "ON" ? "Turn OFF" : "Turn ON",
-                        style: const TextStyle(color: Colors.white),
+                    IconButton(
+                      onPressed: () => controller.fetchLiveData(token, farmId),
+                      icon: const Icon(Icons.refresh),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: const CircleBorder(),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDataItem(
+                              "Voltage",
+                              data.voltage
+                                  .map((v) => '${v.toStringAsFixed(1)}V')
+                                  .join(', '),
+                              Icons.electrical_services,
+                              Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDataItem(
+                              "Current R",
+                              "${data.currentR.toStringAsFixed(2)} A",
+                              Icons.circle,
+                              Colors.red,
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildDataItem(
+                              "Current Y",
+                              "${data.currentY.toStringAsFixed(2)} A",
+                              Icons.circle,
+                              Colors.yellow.shade700,
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildDataItem(
+                              "Current B",
+                              "${data.currentB.toStringAsFixed(2)} A",
+                              Icons.circle,
+                              Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ),
-
-            SizedBox(height: 16),
-            Text(
-              "Out Motors",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            ...controller.outMotors.map(
-              (motor) => Card(
-                child: ListTile(
-                  title: Text(motor.name),
-                  subtitle: Text(
-                    'Lora: ${motor.loraId}, Status: ${motor.status}',
-                  ),
-                  trailing: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: motor.status == "ON"
-                          ? Colors.red
-                          : Colors.green,
-                    ),
-                    onPressed: () {
-                      final newStatus = motor.status == "ON" ? "OFF" : "ON";
-                      controller.toggleMotor(
-                        motorId: motor.id,
-                        status: newStatus,
-                        farmId: farmId,
-                        token: token,
-                      );
-                    },
-                    child: Text(
-                      motor.status == "ON" ? "Turn OFF" : "Turn ON",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 16),
-            Text(
-              "Grouped Valves",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            Obx(() {
-              final groups = controller.groupedValves;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(groups.length, (i) {
-                  final group = groups[i];
-                  return ExpansionTile(
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "${group.name} (ID: ${group.id})",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Obx(() {
-                          return Switch(
-                            value:
-                                controller.groupToggleStates[group.id]?.value ??
-                                false,
-                            onChanged: (_) {
-                              controller.toggleValveGroup(
-                                groupId: group.id,
-                                token: token,
-                                farmId: farmId,
-                              );
-                            },
-                          );
-                        }),
-                      ],
-                    ),
-                    children: group.valves.map<Widget>((valve) {
-                      return Card(
-                        margin: EdgeInsets.symmetric(
-                          vertical: 4,
-                          horizontal: 12,
-                        ),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 16,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      valve.name,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text("Lora: ${valve.loraId}"),
-                                    Text(
-                                      valve.status == 'ON'
-                                          ? 'Status: Opened'
-                                          : 'Status: Closed',
-                                      style: TextStyle(
-                                        color: valve.status == 'ON'
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                iconSize: 48,
-                                icon: Icon(
-                                  valve.status == "ON"
-                                      ? Icons.toggle_on
-                                      : Icons.toggle_off,
-                                  color: valve.status == "ON"
-                                      ? Colors.green
-                                      : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  final newStatus = valve.status == "ON"
-                                      ? "OFF"
-                                      : "ON";
-                                  controller.toggleValve(
-                                    valveId: valve.id,
-                                    status: newStatus,
-                                    token: token,
-                                    farmId: farmId,
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }),
-              );
-            }),
-
-            SizedBox(height: 16),
-            Text(
-              "Ungrouped Valves",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            Obx(() {
-              if (controller.ungroupedValves.isEmpty) {
-                return Text("No ungrouped valves found.");
-              }
-
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: controller.ungroupedValves.map((valve) {
-                  return Container(
-                    width: MediaQuery.of(context).size.width / 2 - 24,
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          valve.name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Lora: ${valve.loraId}',
-                          style: TextStyle(fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 1),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              valve.status == "ON" ? "Opened" : "Closed",
-                              style: TextStyle(
-                                color: valve.status == "ON"
-                                    ? Colors.green
-                                    : Colors.red,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: IconButton(
-                                icon: Icon(
-                                  valve.status == "ON"
-                                      ? Icons.toggle_on
-                                      : Icons.toggle_off,
-                                  color: valve.status == "ON"
-                                      ? Colors.green
-                                      : Colors.grey,
-                                  size: 50,
-                                ),
-                                onPressed: () {
-                                  final newStatus = valve.status == "ON"
-                                      ? "OFF"
-                                      : "ON";
-                                  controller.toggleValve(
-                                    valveId: valve.id,
-                                    status: newStatus,
-                                    token: token,
-                                    farmId: farmId,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              );
-            }),
-            // Paste everything from the original MotorListPage body here
-            // starting from `Text("In Motors")` to end of "Ungrouped Valves"
-          ],
+          ),
         ),
       );
     });
+  }
+
+  Widget _buildDataItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMotorsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader("Motors", Icons.settings, Colors.blue),
+        const SizedBox(height: 12),
+        _buildInMotors(),
+        const SizedBox(height: 16),
+        _buildOutMotors(),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInMotors() {
+    if (controller.inMotors.isEmpty) {
+      return _buildEmptyState("No in motors available", Icons.settings);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "In Motors",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...controller.inMotors.map((motor) => _buildMotorCard(motor, true)),
+      ],
+    );
+  }
+
+  Widget _buildOutMotors() {
+    if (controller.outMotors.isEmpty) {
+      return _buildEmptyState("No out motors available", Icons.settings);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Out Motors",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...controller.outMotors.map((motor) => _buildMotorCard(motor, false)),
+      ],
+    );
+  }
+
+  Widget _buildMotorCard(dynamic motor, bool isInMotor) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: isInMotor
+          ? Obx(() => _buildMotorCardContent(motor, isInMotor))
+          : _buildMotorCardContent(motor, isInMotor),
+    );
+  }
+
+  Widget _buildMotorCardContent(dynamic motor, bool isInMotor) {
+    // final status = isInMotor ? motor.status.value : motor.status;
+    final status = motor.status.value;
+
+    final isOn = status == "ON";
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isOn
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.settings,
+              color: isOn ? Colors.green : Colors.grey,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  motor.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'LoRa ID: ${motor.loraId}',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isOn
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: isOn ? Colors.green.shade700 : Colors.red.shade700,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: isOn,
+            onChanged: (_) {
+              final newStatus = isOn ? "OFF" : "ON";
+              controller.toggleMotor(
+                motorId: motor.id,
+                status: newStatus,
+                farmId: farmId,
+                token: token,
+              );
+            },
+            activeColor: Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValvesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader("Valves", Icons.water_drop, Colors.blue),
+        const SizedBox(height: 12),
+        _buildGroupedValves(),
+        const SizedBox(height: 16),
+        _buildUngroupedValves(),
+      ],
+    );
+  }
+
+  Widget _buildGroupedValves() {
+    return Obx(() {
+      final groups = controller.groupedValves;
+      if (groups.isEmpty) {
+        return _buildEmptyState(
+          "No grouped valves available",
+          Icons.water_drop,
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Grouped Valves",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...groups.map((group) => _buildGroupCard(group)),
+        ],
+      );
+    });
+  }
+
+  Widget _buildGroupCard(dynamic group) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Theme(
+        data: ThemeData().copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.only(bottom: 12),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.water_drop, color: Colors.blue, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "ID: ${group.id} • ${group.valves.length} valves",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          trailing: Obx(() {
+            return Switch(
+              value: controller.groupToggleStates[group.id]?.value ?? false,
+              onChanged: (_) {
+                controller.toggleValveGroup(
+                  groupId: group.id,
+                  token: token,
+                  farmId: farmId,
+                );
+              },
+              activeColor: Colors.blue,
+            );
+          }),
+          children: group.valves
+              .map<Widget>((valve) => _buildValveItem(valve))
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildValveItem(dynamic valve) {
+    final isOn = valve.status == "ON";
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isOn ? Icons.water_drop : Icons.water_drop_outlined,
+            color: isOn ? Colors.blue : Colors.grey,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  valve.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  "LoRa: ${valve.loraId}",
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isOn
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              isOn ? "Open" : "Closed",
+              style: TextStyle(
+                color: isOn ? Colors.green.shade700 : Colors.red.shade700,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch(
+            value: isOn,
+            onChanged: (_) {
+              final newStatus = isOn ? "OFF" : "ON";
+              controller.toggleValve(
+                valveId: valve.id,
+                status: newStatus,
+                token: token,
+                farmId: farmId,
+              );
+            },
+            activeColor: Colors.blue,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUngroupedValves() {
+    return Obx(() {
+      if (controller.ungroupedValves.isEmpty) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Individual Valves",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildEmptyState(
+              "No individual valves available",
+              Icons.water_drop,
+            ),
+          ],
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Individual Valves",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.2,
+            ),
+            itemCount: controller.ungroupedValves.length,
+            itemBuilder: (context, index) {
+              final valve = controller.ungroupedValves[index];
+              final isOn = valve.status == "ON";
+
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isOn
+                                  ? Colors.blue.withOpacity(0.1)
+                                  : Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              isOn
+                                  ? Icons.water_drop
+                                  : Icons.water_drop_outlined,
+                              color: isOn ? Colors.blue : Colors.grey,
+                              size: 16,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isOn
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              isOn ? "Open" : "Closed",
+                              style: TextStyle(
+                                color: isOn
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        valve.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "LoRa: ${valve.loraId}",
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const Spacer(),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Switch(
+                          value: isOn,
+                          onChanged: (_) {
+                            final newStatus = isOn ? "OFF" : "ON";
+                            controller.toggleValve(
+                              valveId: valve.id,
+                              status: newStatus,
+                              token: token,
+                              farmId: farmId,
+                            );
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }

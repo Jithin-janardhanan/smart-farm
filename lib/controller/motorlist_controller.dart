@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/model/motor_model.dart';
@@ -41,7 +40,7 @@ class MotorController extends GetxController {
     } catch (e) {
       Get.snackbar("Something went wrong", "Failed to fetch motors and valves");
     } finally {
-      isLoading.value = false;
+      isLoading.value = false; 
     }
   }
 
