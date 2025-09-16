@@ -64,7 +64,7 @@ class LoginPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background, // Light background
-    
+
       body: SingleChildScrollView(
         child: Container(
           height: isLandscape
@@ -156,7 +156,7 @@ class LoginPage extends StatelessWidget {
           ),
           SizedBox(height: isTablet ? 24 : 16),
           Text(
-            "Smart farm",
+            "Agrita",
             style: TextStyle(
               fontSize: isTablet ? 32 : 28,
               fontWeight: FontWeight.bold,
@@ -165,7 +165,7 @@ class LoginPage extends StatelessWidget {
           ),
           SizedBox(height: isTablet ? 12 : 8),
           Text(
-            "Sign in to continue to SmartFarm",
+            "Sign in to continue to agrita",
             style: TextStyle(
               fontSize: isTablet ? 20 : 16,
               color: AppColors.lightGreen,
@@ -397,7 +397,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(width: isTablet ? 12 : 10),
                   Text(
-                    "Login to SmartFarm",
+                    "Login to agrita",
                     style: TextStyle(
                       fontSize: isTablet ? 20 : 18,
                       fontWeight: FontWeight.bold,

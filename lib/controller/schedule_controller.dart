@@ -169,7 +169,7 @@ class ScheduleController extends GetxController {
       Get.snackbar("Something went wrong", e.toString());
     }
   }
-
+ 
   void loadScheduleForEdit(Schedule schedule) {
     selectedMotorId.value = schedule.motorId;
     selectedGroupId.value = schedule.valveGroupId;

@@ -222,8 +222,8 @@ class ProfileController extends GetxController {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
     }
-    if (value.trim().length < 2) {
-      return '$fieldName must be at least 2 characters';
+    if (value.trim().length <= 1) {
+      return '$fieldName must be at least 1 characters';
     }
     return null;
   }

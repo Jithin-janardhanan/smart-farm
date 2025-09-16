@@ -410,6 +410,7 @@ class ProfileView extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
+          errorMaxLines: 2,
           labelText: label,
           prefixIcon: Icon(
             icon,
@@ -448,7 +449,7 @@ class ProfileView extends StatelessWidget {
           ),
           errorStyle: TextStyle(
             color: AppColors.errorRed,
-            fontSize: isTablet ? 14 : 13,
+            fontSize: isTablet ? 10 : 11,
             fontWeight: FontWeight.w500,
           ),
           hintStyle: TextStyle(

@@ -11,7 +11,7 @@ import 'package:smartfarm/model/create_group.dart';
 import 'package:smartfarm/model/valve_list.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.20.29:8002/api';
+  static const String baseUrl = 'https://anjalip1999.pythonanywhere.com/api';
 
   // LOGIN
   static Future<Map<String, dynamic>> login(
@@ -53,7 +53,7 @@ class ApiService {
     }
   }
 
-  //powesupply
+  //power supply
 
   static Future<LiveData> getLiveData(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/live-data/');
@@ -110,6 +110,8 @@ class ApiService {
     }
   }
 
+  //  To stop all the motors in any farm
+
   static Future<void> emergencyStop(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/shutdown/');
     final headers = {
@@ -160,7 +162,7 @@ class ApiService {
     }
   }
 
-  //MOtor on and offf API
+  //Motor on and offf API
 
   static Future<String> controlMotor({
     required int motorId,
@@ -216,7 +218,8 @@ class ApiService {
     }
   }
 
-  // Get un grouped Valve List
+  // Get ungrouped Valve List
+
   static Future<List<Valve>> getUngroupedValves(
     String token,
     int farmId,
@@ -385,6 +388,7 @@ class ApiService {
       throw Exception('Failed to toggle valve: ${response.reasonPhrase}');
     }
   }
+
   //create new schedule
 
   static Future<http.Response> submitSchedule({
@@ -417,6 +421,7 @@ class ApiService {
 
     return await http.post(url, headers: headers, body: body);
   }
+
   // fetch scheduled events
 
   static Future<List<Schedule>> fetchSchedules({
@@ -458,7 +463,7 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
-    final body = json.encode({
+    final body = json.encode({ 
       "farm": farmId,
       "motor": motorId,
       "valves": valves,
@@ -477,6 +482,7 @@ class ApiService {
       throw Exception('Failed to update schedule: ${response.body}');
     }
   }
+
   //skip schedules
 
   static Future<void> toggleSkipStatus({
@@ -517,6 +523,7 @@ class ApiService {
   }
 
   // LOGOUT
+
   static Future<String> logoutUser(String token) async {
     var url = Uri.parse('$baseUrl/logout/');
 

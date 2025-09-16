@@ -17,20 +17,28 @@ class LiveData {
   });
 
   factory LiveData.fromJson(Map<String, dynamic> json) {
-    return LiveData(
-      id: json['id'] ?? 0,
-      farmName: json['farm_name'] ?? '',
-      voltage: (json['voltage'] as List<dynamic>? ?? [0.0, 0.0, 0.0])
-          .map((v) => (v as num).toDouble())
-          .toList(),
-      currentR: (json['current_r'] as num?)?.toDouble() ?? 0.0,
-      currentY: (json['current_y'] as num?)?.toDouble() ?? 0.0,
-      currentB: (json['current_b'] as num?)?.toDouble() ?? 0.0,
-    );
-  }
+  final voltageMap = json['voltage'] as Map<String, dynamic>?;
+
+  return LiveData(
+    id: json['id'] ?? 0,
+    farmName: json['farm_name'] ?? '',
+    voltage: voltageMap != null
+        ? [
+            (voltageMap['R'] as num?)?.toDouble() ?? 0.0,
+            (voltageMap['Y'] as num?)?.toDouble() ?? 0.0,
+            (voltageMap['B'] as num?)?.toDouble() ?? 0.0,
+          ]
+        : [0.0, 0.0, 0.0],
+    currentR: (json['current_r'] as num?)?.toDouble() ?? 0.0,
+    currentY: (json['current_y'] as num?)?.toDouble() ?? 0.0,
+    currentB: (json['current_b'] as num?)?.toDouble() ?? 0.0,
+  );
+}
+
 
   /// Default data with zeros — useful when no live data
-  factory LiveData.zero({String farmName = ''}) {
+  factory LiveData.zero({String farmName = ''}) 
+  {
     return LiveData(
       id: 0,
       farmName: farmName,

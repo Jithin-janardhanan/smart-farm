@@ -18,8 +18,14 @@ class MotorController extends GetxController {
   var isLiveDataLoading = false.obs;
   Timer? _liveDataTimer;
   var isLoading = false.obs;
-
   var ungroupedValves = <Valve>[].obs;
+
+    var motorLoading = <int, RxBool>{}.obs;   // motorId -> isLoading
+  var valveLoading = <int, RxBool>{}.obs;   // valveId -> isLoading
+  var groupLoading = <int, RxBool>{}.obs;   // groupId -> isLoading
+
+
+  
 
   Future<void> fetchMotorsAndValves(int farmId, String token) async {
     isLoading.value = true;
@@ -44,33 +50,65 @@ class MotorController extends GetxController {
     }
   }
 
+  // Future<void> toggleMotor({
+  //   required int motorId,
+  //   required String status,
+  //   required int farmId,
+  //   required String token,
+  // }) async {
+  //   try {
+  //     final message = await ApiService.controlMotor(
+  //       motorId: motorId,
+  //       status: status,
+  //       token: token,
+  //     );
+
+  //     // update locally without re-fetching
+  //     final motor =
+  //         inMotors.firstWhereOrNull((m) => m.id == motorId) ??
+  //         outMotors.firstWhereOrNull((m) => m.id == motorId);
+  //     if (motor != null) {
+  //       motor.status.value = status;
+  //     }
+
+  //     Get.snackbar("Success", message,  colorText: Colors.green.shade800,
+  //     snackPosition: SnackPosition.BOTTOM);
+  //   } catch (e) {
+  //     Get.snackbar("Something went wrong", "Failed to toggle motor",colorText: Colors.red.shade800,snackPosition: SnackPosition.BOTTOM);
+  //   }
+  // }
   Future<void> toggleMotor({
-    required int motorId,
-    required String status,
-    required int farmId,
-    required String token,
-  }) async {
-    try {
-      final message = await ApiService.controlMotor(
-        motorId: motorId,
-        status: status,
-        token: token,
-      );
+  required int motorId,
+  required String status,
+  required int farmId,
+  required String token,
+}) async {
+  motorLoading[motorId] = true.obs;
+  try {
+    final message = await ApiService.controlMotor(
+      motorId: motorId,
+      status: status,
+      token: token,
+    );
 
-      // update locally without re-fetching
-      final motor =
-          inMotors.firstWhereOrNull((m) => m.id == motorId) ??
-          outMotors.firstWhereOrNull((m) => m.id == motorId);
-      if (motor != null) {
-        motor.status.value = status;
-      }
+    final motor =
+        inMotors.firstWhereOrNull((m) => m.id == motorId) ??
+        outMotors.firstWhereOrNull((m) => m.id == motorId);
 
-      Get.snackbar("Success", message,  colorText: Colors.green.shade800,
-      snackPosition: SnackPosition.BOTTOM);
-    } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to toggle motor",colorText: Colors.red.shade800,snackPosition: SnackPosition.BOTTOM);
+    if (motor != null) {
+      motor.status.value = status;
     }
+
+    Get.snackbar("Success", message,
+        colorText: Colors.green.shade800, snackPosition: SnackPosition.BOTTOM);
+  } catch (e) {
+    Get.snackbar("Error", "Failed to toggle motor",
+        colorText: Colors.red.shade800, snackPosition: SnackPosition.BOTTOM);
+  } finally {
+    motorLoading[motorId]?.value = false;
   }
+}
+
 
   var isLoadingGroups = false.obs;
 
@@ -96,30 +134,57 @@ class MotorController extends GetxController {
 
   //Group Valve Control
 
+  // Future<void> toggleValveGroup({
+  //   required int groupId,
+  //   required String token,
+  //   required int farmId, // Add farmId as required
+  // }) async {
+  //   final currentStatus = groupToggleStates[groupId]?.value ?? false;
+  //   final newStatus = currentStatus ? "OFF" : "ON";
+
+  //   try {
+  //     isLoadingGroups.value = true;
+  //     final msg = await ApiService.controlValveGroup(
+  //       groupId: groupId,
+  //       status: newStatus,
+  //       token: token,
+  //     );
+
+  //     await fetchGroupedValves(token, farmId); // ✅ Fix: pass farmId here
+  //     Get.snackbar("Success", msg);
+  //   } catch (e) {
+  //     Get.snackbar("Something went wrong", "Failed to toggle valve group");
+  //   } finally {
+  //     isLoadingGroups.value = false;
+  //   }
+  // }
+
   Future<void> toggleValveGroup({
-    required int groupId,
-    required String token,
-    required int farmId, // Add farmId as required
-  }) async {
+  required int groupId,
+  required String token,
+  required int farmId,
+}) async {
+  groupLoading[groupId] = true.obs;
+  try {
     final currentStatus = groupToggleStates[groupId]?.value ?? false;
     final newStatus = currentStatus ? "OFF" : "ON";
 
-    try {
-      isLoadingGroups.value = true;
-      final msg = await ApiService.controlValveGroup(
-        groupId: groupId,
-        status: newStatus,
-        token: token,
-      );
+    final msg = await ApiService.controlValveGroup(
+      groupId: groupId,
+      status: newStatus,
+      token: token,
+    );
 
-      await fetchGroupedValves(token, farmId); // ✅ Fix: pass farmId here
-      Get.snackbar("Success", msg);
-    } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to toggle valve group");
-    } finally {
-      isLoadingGroups.value = false;
-    }
+    await fetchGroupedValves(token, farmId);
+
+    Get.snackbar("Success", msg);
+  } catch (e) {
+    Get.snackbar("Error", "Failed to toggle valve group");
+  } finally {
+    groupLoading[groupId]?.value = false;
   }
+}
+ 
 
   //fetch individual ungrouped valve
 
@@ -133,33 +198,60 @@ class MotorController extends GetxController {
   }
   // individual Valve Control
 
+  // Future<void> toggleValve({
+  //   required int valveId,
+  //   required String status, // "ON" or "OFF"
+  //   required String token,
+  //   required int farmId,
+  // }) async {
+  //   try {
+  //     // isLoading.value = true;
+
+  //     final message = await ApiService.controlIndividualValve(
+  //       valveId: valveId,
+  //       status: status,
+  //       token: token,
+  //     );
+
+  //     // Refresh valve data
+  //     await fetchGroupedValves(token, farmId);
+  //     await fetchUngroupedValves(token, farmId);
+
+  //     Get.snackbar("Success", message);
+  //   } catch (e) {
+  //     Get.snackbar("Something went wrong", "Failed to toggle valve");
+  //     print("Something went wrong: $e");
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
+
   Future<void> toggleValve({
-    required int valveId,
-    required String status, // "ON" or "OFF"
-    required String token,
-    required int farmId,
-  }) async {
-    try {
-      // isLoading.value = true;
+  required int valveId,
+  required String status,
+  required String token,
+  required int farmId,
+}) async {
+  valveLoading[valveId] = true.obs;
+  try {
+    final message = await ApiService.controlIndividualValve(
+      valveId: valveId,
+      status: status,
+      token: token,
+    );
 
-      final message = await ApiService.controlIndividualValve(
-        valveId: valveId,
-        status: status,
-        token: token,
-      );
+    await fetchGroupedValves(token, farmId);
+    await fetchUngroupedValves(token, farmId);
 
-      // Refresh valve data
-      await fetchGroupedValves(token, farmId);
-      await fetchUngroupedValves(token, farmId);
-
-      Get.snackbar("Success", message);
-    } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to toggle valve");
-      print("Something went wrong: $e");
-    } finally {
-      isLoading.value = false;
-    }
+    Get.snackbar("Success", message);
+  } catch (e) {
+    Get.snackbar("Error", "Failed to toggle valve");
+    print("Something went wrong: $e");
+  } finally {
+    valveLoading[valveId]?.value = false;
   }
+}
+
 
   //powersupply
 

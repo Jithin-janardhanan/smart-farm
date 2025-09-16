@@ -92,7 +92,7 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(width: 48), // Space for symmetry
                   // Title
                   const Text(
-                    'Smart Farm',
+                    'Agrita',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 22,

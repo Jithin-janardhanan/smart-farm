@@ -385,6 +385,7 @@
 //     });
 //   }
 // }
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
@@ -437,56 +438,29 @@ class MotorListTab extends StatelessWidget {
   }
 
   Widget _buildLiveDataCard() {
-    return Obx(() {
-      if (controller.isLiveDataLoading.value &&
-          controller.liveData.value == null) {
-        return const Card(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        );
-      }
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 🔹 Top row: Power icon + Farm name + Status + Refresh
+              Row(
+                children: [
+                  // Power icon
+                  Obx(() {
+                    final data = controller.liveData.value ?? LiveData.zero();
+                    final isMotorRunning =
+                        !(data.voltage.every((v) => v == 0.0) &&
+                            data.currentR == 0.0 &&
+                            data.currentY == 0.0 &&
+                            data.currentB == 0.0);
 
-      final data =
-          controller.liveData.value ??
-          LiveData(
-            id: 0,
-            farmName: "Farm $farmId",
-            voltage: [0.0, 0.0, 0.0],
-            currentR: 0.0,
-            currentY: 0.0,
-            currentB: 0.0,
-          );
-
-      final isMotorRunning =
-          !(data.voltage.every((v) => v == 0.0) &&
-              data.currentR == 0.0 &&
-              data.currentY == 0.0 &&
-              data.currentB == 0.0);
-
-      return Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: isMotorRunning
-                  ? [Colors.green.shade50, Colors.green.shade100]
-                  : [Colors.red.shade50, Colors.red.shade100],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
+                    return Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isMotorRunning ? Colors.green : Colors.red,
@@ -497,10 +471,21 @@ class MotorListTab extends StatelessWidget {
                         color: Colors.white,
                         size: 20,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
+                    );
+                  }),
+                  const SizedBox(width: 12),
+
+                  // Farm name + Status
+                  Expanded(
+                    child: Obx(() {
+                      final data = controller.liveData.value ?? LiveData.zero();
+                      final isMotorRunning =
+                          !(data.voltage.every((v) => v == 0.0) &&
+                              data.currentR == 0.0 &&
+                              data.currentY == 0.0 &&
+                              data.currentB == 0.0);
+
+                      return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -522,33 +507,42 @@ class MotorListTab extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ),
+                      );
+                    }),
+                  ),
+
+                  // Refresh button
+                  IconButton(
+                    onPressed: () => controller.fetchLiveData(token, farmId),
+                    icon: const Icon(Icons.refresh),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: const CircleBorder(),
                     ),
-                    IconButton(
-                      onPressed: () => controller.fetchLiveData(token, farmId),
-                      icon: const Icon(Icons.refresh),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: const CircleBorder(),
-                      ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              /// 🔹 Values box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
+                child: Obx(() {
+                  final data = controller.liveData.value ?? LiveData.zero();
+
+                  return Column(
                     children: [
                       Row(
                         children: [
@@ -594,14 +588,14 @@ class MotorListTab extends StatelessWidget {
                         ],
                       ),
                     ],
-                  ),
-                ),
-              ],
-            ),
+                  );
+                }),
+              ),
+            ],
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 
   Widget _buildDataItem(
@@ -719,9 +713,7 @@ class MotorListTab extends StatelessWidget {
   }
 
   Widget _buildMotorCardContent(dynamic motor, bool isInMotor) {
-    // final status = isInMotor ? motor.status.value : motor.status;
     final status = motor.status.value;
-
     final isOn = status == "ON";
 
     return Padding(
@@ -783,19 +775,31 @@ class MotorListTab extends StatelessWidget {
               ],
             ),
           ),
-          Switch(
-            value: isOn,
-            onChanged: (_) {
-              final newStatus = isOn ? "OFF" : "ON";
-              controller.toggleMotor(
-                motorId: motor.id,
-                status: newStatus,
-                farmId: farmId,
-                token: token,
+
+          // 👇 Loader or Switch
+          Obx(() {
+            final isLoading = controller.motorLoading[motor.id]?.value ?? false;
+            if (isLoading) {
+              return const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
               );
-            },
-            activeColor: Colors.green,
-          ),
+            }
+            return Switch(
+              value: isOn,
+              onChanged: (_) {
+                final newStatus = isOn ? "OFF" : "ON";
+                controller.toggleMotor(
+                  motorId: motor.id,
+                  status: newStatus,
+                  farmId: farmId,
+                  token: token,
+                );
+              },
+              activeColor: Colors.green,
+            );
+          }),
         ],
       ),
     );
@@ -886,6 +890,14 @@ class MotorListTab extends StatelessWidget {
             ],
           ),
           trailing: Obx(() {
+            final isLoading = controller.groupLoading[group.id]?.value ?? false;
+            if (isLoading) {
+              return const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
             return Switch(
               value: controller.groupToggleStates[group.id]?.value ?? false,
               onChanged: (_) {
@@ -1011,95 +1023,69 @@ class MotorListTab extends StatelessWidget {
               color: Colors.grey.shade700,
             ),
           ),
-          const SizedBox(height: 12),
-          GridView.builder(
+
+          // 👇 Wrap the ListView so it doesn’t push space
+          ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
+            padding: EdgeInsets.zero, // removes default padding
             itemCount: controller.ungroupedValves.length,
             itemBuilder: (context, index) {
               final valve = controller.ungroupedValves[index];
               final isOn = valve.status == "ON";
 
               return Card(
+                margin: const EdgeInsets.symmetric(
+                  vertical: 8,
+                ), // tighter spacing
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isOn
-                                  ? Colors.blue.withOpacity(0.1)
-                                  : Colors.grey.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              isOn
-                                  ? Icons.water_drop
-                                  : Icons.water_drop_outlined,
-                              color: isOn ? Colors.blue : Colors.grey,
-                              size: 16,
-                            ),
+                child: ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 1,
+                  ),
+                  leading: Icon(
+                    isOn ? Icons.water_drop : Icons.water_drop_outlined,
+                    color: isOn ? Colors.blue : Colors.grey,
+                    size: 18,
+                  ),
+                  title: Text(
+                    valve.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "LoRa: ${valve.loraId}",
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                  trailing: Obx(() {
+                    final isLoading = controller.valveLoading[valve.id]?.value ?? false;
+            if (isLoading) {
+              return const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+                   return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isOn ? "Open" : "Closed",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isOn
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isOn
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              isOn ? "Open" : "Closed",
-                              style: TextStyle(
-                                color: isOn
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        valve.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "LoRa: ${valve.loraId}",
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const Spacer(),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Switch(
+                        Switch(
                           value: isOn,
                           onChanged: (_) {
                             final newStatus = isOn ? "OFF" : "ON";
@@ -1111,10 +1097,12 @@ class MotorListTab extends StatelessWidget {
                             );
                           },
                           activeColor: Colors.blue,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ),
               );
             },
@@ -1135,7 +1123,7 @@ class MotorListTab extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: Colors.grey.shade400),
+          Icon(icon, size: 28, color: Colors.grey.shade400),
           const SizedBox(height: 12),
           Text(
             message,
