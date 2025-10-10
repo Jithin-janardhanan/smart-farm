@@ -793,7 +793,7 @@ class SchedulePage extends StatelessWidget {
                                   () => Text(
                                     controller.startDate.value == null
                                         ? "Start Date"
-                                        : "${controller.startDate.value!.toLocal().toString().split(' ')[0]}",
+                                        : controller.startDate.value!.toLocal().toString().split(' ')[0],
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -825,7 +825,7 @@ class SchedulePage extends StatelessWidget {
                                   () => Text(
                                     controller.endDate.value == null
                                         ? "End Date"
-                                        : "${controller.endDate.value!.toLocal().toString().split(' ')[0]}",
+                                        : controller.endDate.value!.toLocal().toString().split(' ')[0],
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -866,7 +866,7 @@ class SchedulePage extends StatelessWidget {
                                   () => Text(
                                     controller.startTime.value == null
                                         ? "Start Time"
-                                        : "${controller.startTime.value!.format(context)}",
+                                        : controller.startTime.value!.format(context),
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -893,7 +893,7 @@ class SchedulePage extends StatelessWidget {
                                   () => Text(
                                     controller.endTime.value == null
                                         ? "End Time"
-                                        : "${controller.endTime.value!.format(context)}",
+                                        : controller.endTime.value!.format(context),
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                 ),

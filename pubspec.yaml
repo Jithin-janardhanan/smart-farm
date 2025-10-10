@@ -14,6 +14,7 @@ dependencies:
   get: ^4.7.2
   http: ^1.4.0
   shared_preferences: ^2.5.3
+  flutter_dotenv: ^6.0.0
   
 
 dev_dependencies:
@@ -35,3 +36,4 @@ flutter:
   assets:
     - assets/images/premium.jpeg
     - assets/images/smartfarm_icon.png
+    - .env

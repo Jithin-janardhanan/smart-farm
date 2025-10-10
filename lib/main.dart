@@ -1,33 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/view/splash.dart';
 
-// void main() {
-//   runApp( MyApp());
-// }
-// class MyApp extends StatelessWidget {
-//    const MyApp({super.key});
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-//   // This widget is the root of your application.
-//   @override
-//   Widget build(BuildContext context) {
-//     return GetMaterialApp(
-//       title: 'Smart Farm',
+  // 👇 load dotenv first
+  await dotenv.load(fileName: ".env");
 
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(
-//         primaryColor: AppColors.primaryColor,
-//         primarySwatch: Colors.green,
-//         // tested with just a hot reload.
-//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-//       ),
-//       home: SplashScreen(),
-//     );
-//   }
-// }
+  // 👇 log BASE_URL to confirm it worked
+  print("✅ BASE_URL loaded: ${dotenv.env['BASE_URL']}");
 
-void main() {
   runApp(const MyApp());
 }
 

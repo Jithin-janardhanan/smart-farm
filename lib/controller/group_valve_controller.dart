@@ -1,77 +1,3 @@
-// //fetch grouped valve and create new valve group
-
-// import 'package:get/get.dart';
-// import '../model/valve_group_model.dart';
-// import '../model/valve_group_request.dart';
-// import '../service/api_service.dart';
-
-// class CreateValveGroupController extends GetxController {
-//   var groupName = ''.obs;
-//   var selectedValveIds = <int>{}.obs;
-//   var isSubmitting = false.obs;
-//   var isLoadingGroups = false.obs;
-//   var showForm = false.obs; // ✅ this line is required
-
-//   var groupedValves = <ValveGroup>[].obs;
-
-//   Future<void> fetchGroupedValves(String token) async {
-//     isLoadingGroups.value = true;
-//     try {
-//       final groups = await ApiService.getGroupedValveList(token);
-//       groupedValves.value = groups;
-//     } catch (e) {
-//       print("Fetch group error: $e");
-//     }
-//     isLoadingGroups.value = false;
-//   }
-
-//   Future<void> submitGroup({
-//     required String token,
-//     required int farmId,
-//     required void Function(bool success) onResult,
-//   }) async {
-//     if (groupName.value.isEmpty || selectedValveIds.isEmpty) {
-//       onResult(false);
-//       return;
-//     }
-
-//     isSubmitting.value = true;
-
-//     final request = ValveGroupRequest(
-//       farm: farmId,
-//       name: groupName.value,
-//       valveIds: selectedValveIds.toList(),
-//     );
-
-//     try {
-//       await ApiService.createValveGroup(token, request);
-//       onResult(true);
-//     } catch (e) {
-//       print("Create Group Error: $e");
-//       onResult(false);
-//     }
-
-//     isSubmitting.value = false;
-//   }
-
-//   void toggleValve(int id) {
-//     if (selectedValveIds.contains(id)) {
-//       selectedValveIds.remove(id);
-//     } else {
-//       selectedValveIds.add(id);
-//     }
-//   }
-
-//   void clearForm() {
-//     groupName.value = '';
-//     selectedValveIds.clear();
-//   }
-
-//   void toggleForm() {
-//     showForm.toggle(); // ✅ works only if showForm is defined
-//   }
-
-// }
 
 // create_valve_group_controller.dart
 import 'package:flutter/widgets.dart';
@@ -112,7 +38,7 @@ class CreateValveGroupController extends GetxController {
       final groups = await ApiService.getGroupedValveList(token, farmId);
       groupedValves.value = groups;
     } catch (e) {
-      print("Fetch group error: $e");
+      print("Fetch group failed: $e");
     } finally {
       isLoadingGroups.value = false;
     }
@@ -207,7 +133,7 @@ class CreateValveGroupController extends GetxController {
 
       onResult(success);
     } catch (e) {
-      debugPrint("Update Group Error: $e");
+      debugPrint("Update Group failed: $e");
       onResult(false);
     }
 

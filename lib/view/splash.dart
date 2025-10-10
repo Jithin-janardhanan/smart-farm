@@ -18,19 +18,38 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigate();
   }
 
+  // Future<void> _navigate() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final token = prefs.getString('token');
+  //   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+  //   await Future.delayed(const Duration(seconds: 1)); // optional splash delay
+
+  //   if (isLoggedIn && token != null && token.isNotEmpty) {
+  //     Get.off(() => HomePage(token: token));
+  //   } else {
+  //     Get.off(() => LoginPage());
+  //   }
+  // }
+
   Future<void> _navigate() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  print("Splash: start navigation");
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  print("Splash: token=$token, isLoggedIn=$isLoggedIn");
 
-    await Future.delayed(const Duration(seconds: 1)); // optional splash delay
+  await Future.delayed(const Duration(seconds: 1));
 
-    if (isLoggedIn && token != null && token.isNotEmpty) {
-      Get.off(() => HomePage(token: token));
-    } else {
-      Get.off(() => LoginPage());
-    }
+  if (isLoggedIn && token != null && token.isNotEmpty) {
+    print("Splash: going to HomePage");
+    Get.off(() => HomePage(token: token));
+  } else {
+    print("Splash: going to LoginPage");
+    Get.off(() => LoginPage());
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

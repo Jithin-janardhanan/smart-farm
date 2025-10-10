@@ -1,4 +1,3 @@
-
 import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -60,8 +59,11 @@ class LoginController extends GetxController {
   }
 
   void login() async {
+    log("🔍 Login function triggered");
+
     // Validate form before proceeding
     if (!formKey.currentState!.validate()) {
+      log("⚠️ Form validation failed");
       Get.snackbar(
         "Validation Something went wrong",
         "Please fix the errors above",
@@ -74,14 +76,22 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
+    log("⏳ isLoading set to true");
 
     try {
+      log(
+        "📡 Sending login request with phone: ${phoneController.text.trim()}",
+      );
       final response = await ApiService.login(
         phoneController.text.trim(),
         passwordController.text.trim(),
       );
+      log("✅ API Response: $response");
 
       final user = User.fromJson(response);
+      log(
+        "👤 User parsed: id=${user.userId}, farmerId=${user.farmerId}, token=${user.token}",
+      );
 
       // ✅ Save token using SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -89,8 +99,16 @@ class LoginController extends GetxController {
       await prefs.setInt('user_id', user.userId);
       await prefs.setInt('farmer_id', user.farmerId);
       await prefs.setBool('isLoggedIn', true);
+
+      log("💾 Token saved to SharedPreferences: ${user.token}");
+
+      // Put FarmController
       Get.put(FarmController());
+      log("📦 FarmController initialized");
+
+      // Navigate to HomePage
       Get.off(() => HomePage(token: user.token));
+      log("➡️ Navigated to HomePage with token");
 
       Get.snackbar(
         "Success",
@@ -100,9 +118,8 @@ class LoginController extends GetxController {
         icon: Icon(Icons.check_circle_outline, color: Colors.green.shade800),
         snackPosition: SnackPosition.BOTTOM,
       );
-      log("Token saved: ${user.token}");
-    } catch (e) {
-      log("debug:${e.toString()}");
+    } catch (e, stacktrace) {
+      log("❌ Login error: ${e.toString()}", stackTrace: stacktrace);
       Get.snackbar(
         "Login Failed",
         "Please check your credentials and try again",
@@ -113,8 +130,66 @@ class LoginController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+      log("✅ isLoading set to false (finished login process)");
     }
   }
+
+  // void login() async {
+  //   // Validate form before proceeding
+  //   if (!formKey.currentState!.validate()) {
+  //     Get.snackbar(
+  //       "Validation Something went wrong",
+  //       "Please fix the errors above",
+  //       backgroundColor: Colors.red.shade50,
+  //       colorText: Colors.red.shade800,
+  //       icon: Icon(Icons.error_outline, color: Colors.red.shade800),
+  //       snackPosition: SnackPosition.TOP,
+  //     );
+  //     return;
+  //   }
+
+  //   isLoading.value = true;
+
+  //   try {
+  //     final response = await ApiService.login(
+  //       phoneController.text.trim(),
+  //       passwordController.text.trim(),
+  //     );
+
+  //     final user = User.fromJson(response);
+
+  //     // ✅ Save token using SharedPreferences
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     await prefs.setString('token', user.token);
+  //     await prefs.setInt('user_id', user.userId);
+  //     await prefs.setInt('farmer_id', user.farmerId);
+  //     await prefs.setBool('isLoggedIn', true);
+  //     Get.put(FarmController());
+  //     Get.off(() => HomePage(token: user.token));
+
+  //     Get.snackbar(
+  //       "Success",
+  //       "Login successful!",
+  //       backgroundColor: Colors.green.shade50,
+  //       colorText: Colors.green.shade800,
+  //       icon: Icon(Icons.check_circle_outline, color: Colors.green.shade800),
+  //       snackPosition: SnackPosition.BOTTOM,
+  //     );
+  //     log("Token saved: ${user.token}");
+  //   } catch (e) {
+  //     log("debug:${e.toString()}");
+  //     Get.snackbar(
+  //       "Login Failed",
+  //       "Please check your credentials and try again",
+  //       backgroundColor: Colors.red.shade50,
+  //       colorText: Colors.red.shade800,
+  //       icon: Icon(Icons.error_outline, color: Colors.red.shade800),
+  //       snackPosition: SnackPosition.BOTTOM,
+  //     );
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
 
   @override
   void onClose() {

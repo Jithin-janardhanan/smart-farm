@@ -8,7 +8,7 @@ class LiveData {
   final double currentB;
 
   LiveData({
-     required this.id,
+    required this.id,
     required this.farmName,
     required this.voltage,
     required this.currentR,
@@ -17,28 +17,29 @@ class LiveData {
   });
 
   factory LiveData.fromJson(Map<String, dynamic> json) {
-  final voltageMap = json['voltage'] as Map<String, dynamic>?;
+  final voltageList = (json['voltage'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList() ??
+      [0.0, 0.0, 0.0];
+
+  final currentList = (json['current'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList() ??
+      [0.0, 0.0, 0.0];
 
   return LiveData(
     id: json['id'] ?? 0,
     farmName: json['farm_name'] ?? '',
-    voltage: voltageMap != null
-        ? [
-            (voltageMap['R'] as num?)?.toDouble() ?? 0.0,
-            (voltageMap['Y'] as num?)?.toDouble() ?? 0.0,
-            (voltageMap['B'] as num?)?.toDouble() ?? 0.0,
-          ]
-        : [0.0, 0.0, 0.0],
-    currentR: (json['current_r'] as num?)?.toDouble() ?? 0.0,
-    currentY: (json['current_y'] as num?)?.toDouble() ?? 0.0,
-    currentB: (json['current_b'] as num?)?.toDouble() ?? 0.0,
+    voltage: voltageList,
+    currentR: currentList.isNotEmpty ? currentList[0] : 0.0,
+    currentY: currentList.length > 1 ? currentList[1] : 0.0,
+    currentB: currentList.length > 2 ? currentList[2] : 0.0,
   );
 }
 
 
   /// Default data with zeros — useful when no live data
-  factory LiveData.zero({String farmName = ''}) 
-  {
+  factory LiveData.zero({String farmName = ''}) {
     return LiveData(
       id: 0,
       farmName: farmName,
@@ -49,5 +50,3 @@ class LiveData {
     );
   }
 }
-
-

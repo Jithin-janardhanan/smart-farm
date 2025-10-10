@@ -114,23 +114,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CurvedAppBar(),
-      // appBar: AppBar(
-      //   elevation: 0,
-      //   backgroundColor: Colors.white,
-      //   foregroundColor: Colors.green[800],
-      //   centerTitle: true,
-      //   title: const Text(
-      //     'Smart Farm',
-      //     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-      //   ),
-      //   actions: [
-      //     IconButton(
-      //       onPressed: () => Get.to(() => ProfileView()),
-      //       icon: const Icon(Icons.person_outline),
-      //       tooltip: 'Profile',
-      //     ),
-      //   ],
-      // ),
+      
       body: Obx(() {
         if (farmController.isLoading.value) {
           return const Center(
@@ -141,7 +125,15 @@ class HomePage extends StatelessWidget {
         }
 
         if (farmController.farms.isEmpty) {
-          return Center(
+  return RefreshIndicator(
+    onRefresh: farmController.fetchFarms,
+    color: Colors.green,
+    child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(), // <-- allows pull even if empty
+      children: [
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -166,8 +158,12 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
-          );
-        }
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
         return RefreshIndicator(
           onRefresh: farmController.fetchFarms,

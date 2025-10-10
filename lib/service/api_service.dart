@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:developer';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
@@ -11,13 +13,21 @@ import 'package:smartfarm/model/create_group.dart';
 import 'package:smartfarm/model/valve_list.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://anjalip1999.pythonanywhere.com/api';
+  static String get baseUrl {
+    final url = dotenv.env['BASE_URL'];
+    if (url == null || url.isEmpty) {
+      throw Exception("❌ BASE_URL not found in .env file");
+    }
+    return url;
+  }
+  //login
 
-  // LOGIN
   static Future<Map<String, dynamic>> login(
     String phone,
     String password,
   ) async {
+    log("🌍 Using baseUrl: $baseUrl");
+
     var url = Uri.parse('$baseUrl/farmer-login/');
     var headers = {'Content-Type': 'application/json'};
     var body = json.encode({"phone_number": phone, "password": password});
@@ -28,6 +38,8 @@ class ApiService {
 
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
+
+    log("📡 Login response [${response.statusCode}]: ${response.body}");
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -162,7 +174,7 @@ class ApiService {
     }
   }
 
-  //Motor on and offf API
+  //Motor on and off API
 
   static Future<String> controlMotor({
     required int motorId,
@@ -179,9 +191,12 @@ class ApiService {
     final response = await http.post(url, headers: headers, body: body);
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['message'] ?? 'Success';
+      final data = jsonDecode(response.body);
+      return data["message"] ?? "Motor updated successfully";
     } else {
-      throw Exception('Failed to control motor');
+      // throw error with backend message
+      final data = jsonDecode(response.body);
+      throw Exception(data["detail"] ?? "Something went wrong");
     }
   }
 
@@ -463,7 +478,7 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
-    final body = json.encode({ 
+    final body = json.encode({
       "farm": farmId,
       "motor": motorId,
       "valves": valves,
