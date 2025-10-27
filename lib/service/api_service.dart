@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:smartfarm/controller/notificition.dart';
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
@@ -26,25 +27,55 @@ class ApiService {
     String phone,
     String password,
   ) async {
+    log("🚀 [login()] function called with:");
+    log("📞 Phone: $phone");
+    log("🔑 Password: $password");
+
     log("🌍 Using baseUrl: $baseUrl");
 
     var url = Uri.parse('$baseUrl/farmer-login/');
     var headers = {'Content-Type': 'application/json'};
     var body = json.encode({"phone_number": phone, "password": password});
 
-    var request = http.Request('POST', url);
-    request.body = body;
-    request.headers.addAll(headers);
+    log("🌐 Full URL: $url");
+    log("📤 Sending body: $body");
 
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
 
-    log("📡 Login response [${response.statusCode}]: ${response.body}");
+      log("📡 Login response [${response.statusCode}]: ${response.body}");
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Login failed: ${response.body}');
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        String token = data['token'];
+        log("✅ Login successful! Token received: $token");
+
+        await FCMService.sendTokenToBackend(token);
+        return data;
+      } else {
+        log("❌ Login failed with status ${response.statusCode}");
+        throw Exception('Login failed: ${response.body}');
+      }
+    } catch (e, s) {
+      log("💥 Exception in login(): $e");
+      log("🧾 Stacktrace: $s");
+      rethrow;
+    }
+  }
+
+  static Future<void> sendFcmToken(String fcmToken, String token) async {
+    try {
+      var url = Uri.parse('$baseUrl/save-fcm-token/');
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      };
+      var body = json.encode({'fcm_token': fcmToken});
+      var response = await http.post(url, headers: headers, body: body);
+
+      log("📡 FCM Token Response [${response.statusCode}]: ${response.body}");
+    } catch (e) {
+      log("🚨 Error sending FCM token: $e");
     }
   }
 

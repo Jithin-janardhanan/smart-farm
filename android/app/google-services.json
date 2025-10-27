@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "823316443657",
+    "project_id": "agrita-2c5d6",
+    "storage_bucket": "agrita-2c5d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823316443657:android:64b0e81a514b770fd5bed8",
+        "android_client_info": {
+          "package_name": "com.agrita.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcLZ0MAd0AFGwGwsjIOiU5v9acUcr27GQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -173,6 +173,7 @@ class ScheduleController extends GetxController {
   void loadScheduleForEdit(Schedule schedule) {
     selectedMotorId.value = schedule.motorId;
     selectedGroupId.value = schedule.valveGroupId;
+    // ignore: invalid_use_of_protected_member
     selectedValveIds.value = schedule.valves.toSet();
 
     startDate.value = DateTime.parse(schedule.startDate);
@@ -221,6 +222,5 @@ Future<void> deleteSchedule(int scheduleId) async {
     Get.snackbar("Something went wrong", e.toString());
   }
 }
-
 
 }

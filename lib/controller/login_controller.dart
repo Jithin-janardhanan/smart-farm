@@ -59,78 +59,69 @@ class LoginController extends GetxController {
   }
 
   void login() async {
-    log("🔍 Login function triggered");
-
     // Validate form before proceeding
     if (!formKey.currentState!.validate()) {
-      log("⚠️ Form validation failed");
       Get.snackbar(
-        "Validation Something went wrong",
-        "Please fix the errors above",
+        "Invalid Input",
+        "Please enter both phone number and password.",
         backgroundColor: Colors.red.shade50,
         colorText: Colors.red.shade800,
-        icon: Icon(Icons.error_outline, color: Colors.red.shade800),
+        icon: const Icon(Icons.error_outline, color: Colors.red),
         snackPosition: SnackPosition.TOP,
       );
       return;
     }
 
     isLoading.value = true;
-    log("⏳ isLoading set to true");
 
     try {
-      log(
-        "📡 Sending login request with phone: ${phoneController.text.trim()}",
-      );
-      final response = await ApiService.login(
-        phoneController.text.trim(),
-        passwordController.text.trim(),
-      );
-      log("✅ API Response: $response");
+      final phone = phoneController.text.trim();
+      final password = passwordController.text.trim();
+
+      // Call API Service
+      final response = await ApiService.login(phone, password);
 
       final user = User.fromJson(response);
-      log(
-        "👤 User parsed: id=${user.userId}, farmerId=${user.farmerId}, token=${user.token}",
-      );
 
-      // ✅ Save token using SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // Save login details
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', user.token);
       await prefs.setInt('user_id', user.userId);
       await prefs.setInt('farmer_id', user.farmerId);
       await prefs.setBool('isLoggedIn', true);
 
-      log("💾 Token saved to SharedPreferences: ${user.token}");
-
-      // Put FarmController
+      // Initialize controllers
       Get.put(FarmController());
-      log("📦 FarmController initialized");
 
-      // Navigate to HomePage
+      // Navigate to home page
       Get.off(() => HomePage(token: user.token));
-      log("➡️ Navigated to HomePage with token");
 
+      // Success message
       Get.snackbar(
-        "Success",
-        "Login successful!",
+        "Login Successful",
+        "Welcome back!",
         backgroundColor: Colors.green.shade50,
         colorText: Colors.green.shade800,
-        icon: Icon(Icons.check_circle_outline, color: Colors.green.shade800),
+        icon: const Icon(Icons.check_circle_outline, color: Colors.green),
         snackPosition: SnackPosition.BOTTOM,
       );
-    } catch (e, stacktrace) {
-      log("❌ Login error: ${e.toString()}", stackTrace: stacktrace);
+    } catch (e) {
+      String errorMessage = "Something went wrong. Please try again.";
+
+      if (e.toString().contains("Invalid phone number or password")) {
+        errorMessage = "Invalid phone number or password.";
+      }
+
       Get.snackbar(
         "Login Failed",
-        "Please check your credentials and try again",
+        errorMessage,
         backgroundColor: Colors.red.shade50,
         colorText: Colors.red.shade800,
-        icon: Icon(Icons.error_outline, color: Colors.red.shade800),
+        icon: const Icon(Icons.error_outline, color: Colors.red),
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoading.value = false;
-      log("✅ isLoading set to false (finished login process)");
     }
   }
 
@@ -193,8 +184,11 @@ class LoginController extends GetxController {
 
   @override
   void onClose() {
-    phoneController.dispose();
-    passwordController.dispose();
+    // Dispose only if widgets are not rebuilding
+    if (Get.isRegistered<LoginController>()) {
+      phoneController.dispose();
+      passwordController.dispose();
+    }
     super.onClose();
   }
 }

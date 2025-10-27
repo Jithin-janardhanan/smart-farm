@@ -1,102 +1,34 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:smartfarm/controller/farm_controller.dart';
-// import 'package:smartfarm/view/profile.dart';
-// import 'package:smartfarm/view/tab_controller.dart';
-
-// class HomePage extends StatelessWidget {
-//   final String token;
-
-//   FarmController farmController = Get.put(FarmController());
-
-//   HomePage({super.key, required this.token});
-
-//   Future<void> navigateToMotors(int farmId) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     String? token = prefs.getString('token');
-
-//     if (token != null) {
-//       Get.to(() => IoTDashboardPage(farmId: farmId, token: token));
-//     } else {
-//       print("Token not found");
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         centerTitle: true,
-//         title: Text('Smart farm'),
-//         actions: [
-//           Padding(
-//             padding: const EdgeInsets.all(8.0),
-//             child: IconButton(
-//               onPressed: () => Get.to(ProfileView()),
-//               icon: Icon(Icons.person),
-//             ),
-//           ),
-//         ],
-//       ),
-//       body: Obx(() {
-//         if (farmController.isLoading.value) {
-//           return Center(child: CircularProgressIndicator());
-//         }
-
-//         return RefreshIndicator(
-//           onRefresh: farmController.fetchFarms,
-//           child: ListView.builder(
-//             itemCount: farmController.farms.length,
-//             itemBuilder: (context, index) {
-//               final farm = farmController.farms[index];
-//               return Card(
-//                 margin: EdgeInsets.all(10),
-//                 child: ListTile(
-//                   onTap: () {
-//                     navigateToMotors(farm.id);
-//                   },
-//                   title: Text(
-//                     farm.farmName,
-//                     style: TextStyle(fontWeight: FontWeight.bold),
-//                   ),
-//                   subtitle: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text("📍 ${farm.location}"),
-//                       Text("Area: ${farm.farmArea} acres"),
-//                       Text("GSM: ${farm.gsmNumber}"),
-//                     ],
-//                   ),
-//                   trailing: IconButton(
-//                     icon: Icon(Icons.warning, color: Colors.red),
-//                     tooltip: "Emergency Stop",
-//                     onPressed: () {
-//                       farmController.triggerEmergencyStop(farm.id);
-//                     },
-//                   ),
-//                 ),
-//               );
-//             },
-//           ),
-//         );
-//       }),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
 import 'package:smartfarm/view/curved_appbar.dart';
+import 'package:smartfarm/view/profile.dart';
 import 'package:smartfarm/view/tab_controller.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatelessWidget {
   final String token;
   final FarmController farmController = Get.put(FarmController());
 
   HomePage({super.key, required this.token});
+  Future<void> _launchPrivacyPolicy() async {
+    final Uri url = Uri.parse(
+      'https://www.freeprivacypolicy.com/live/51146187-bd61-4675-aff6-705c863a61f1',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  Future<void> _launchfeedback() async {
+    final Uri url = Uri.parse(
+      'https://play.google.com/store/apps/details?id=com.agrita.app',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   Future<void> navigateToMotors(int farmId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -114,7 +46,69 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CurvedAppBar(),
-      
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width * 0.3,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // Drawer Header
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green[700]!, Colors.green[400]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: CircleAvatar(
+                child: Text(
+                  "Agrita",
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 205, 14, 14),
+                  ),
+                ),
+              ),
+            ),
+
+            // Drawer Items
+            ListTile(
+              leading: const Icon(Icons.home_outlined),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Get.to(() => const ProfileView());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.feedback_outlined),
+              title: const Text('feedback'),
+              onTap: _launchfeedback,
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy Policy'),
+              onTap: _launchPrivacyPolicy,
+            ),
+
+            // const Divider(),
+            // ListTile(
+            //   leading: const Icon(Icons.logout, color: Colors.red),
+            //   title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            //   onTap: () {
+            //     // Handle logout
+            //   },
+            // ),
+          ],
+        ),
+      ),
+
       body: Obx(() {
         if (farmController.isLoading.value) {
           return const Center(
@@ -125,45 +119,49 @@ class HomePage extends StatelessWidget {
         }
 
         if (farmController.farms.isEmpty) {
-  return RefreshIndicator(
-    onRefresh: farmController.fetchFarms,
-    color: Colors.green,
-    child: ListView(
-      physics: const AlwaysScrollableScrollPhysics(), // <-- allows pull even if empty
-      children: [
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          return RefreshIndicator(
+            onRefresh: farmController.fetchFarms,
+            color: Colors.green,
+            child: ListView(
+              physics:
+                  const AlwaysScrollableScrollPhysics(), // <-- allows pull even if empty
               children: [
-                Icon(
-                  Icons.agriculture_outlined,
-                  size: 80,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No farms found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.agriculture_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No farms found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Pull down to refresh',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Pull down to refresh',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
               ],
             ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
+          );
+        }
 
         return RefreshIndicator(
           onRefresh: farmController.fetchFarms,

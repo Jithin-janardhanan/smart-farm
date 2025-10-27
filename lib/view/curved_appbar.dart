@@ -84,45 +84,61 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
 
           // AppBar content
           SafeArea(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(width: 48), // Space for symmetry
-                  // Title
-                  const Text(
-                    'Agrita',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 22,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black26,
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Profile button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Get.to(() => ProfileView()),
-                      icon: const Icon(
-                        Icons.person_outline,
-                        color: Colors.white,
+            child: Builder(
+              builder: (context) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // ✅ Drawer Menu Icon (replaces the SizedBox)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      tooltip: 'Profile',
+                      child: IconButton(
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer(); // Opens the drawer
+                        },
+                        icon: const Icon(Icons.menu, color: Colors.white),
+                        tooltip: 'Menu',
+                      ),
                     ),
-                  ),
-                ],
+
+                    // ✅ Title in center
+                    const Text(
+                      'Agrita',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 22,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black26,
+                            offset: Offset(1, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ✅ Profile Button on the right
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: IconButton(
+                        onPressed: () => Get.to(() => const ProfileView()),
+                        icon: const Icon(
+                          Icons.person_outline,
+                          color: Colors.white,
+                        ),
+                        tooltip: 'Profile',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
