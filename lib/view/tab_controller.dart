@@ -39,42 +39,36 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.green[800],
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.primary,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
+              colors: [
+                colorScheme.primary.withOpacity(0.15),
+                colorScheme.surface.withOpacity(0.7),
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.green.withOpacity(0.15),
-                Colors.green.withOpacity(0.05),
-              ],
             ),
           ),
         ),
         title: Row(
           children: [
-            // Container(
-            //   padding: const EdgeInsets.all(8),
-            //   decoration: BoxDecoration(
-            //     color: Colors.green.withOpacity(0.2),
-            //     borderRadius: BorderRadius.circular(12),
-            //   ),
-            //   child: Icon(Icons.eco, color: Colors.green[700], size: 24),
-            // ),
             const SizedBox(width: 12),
             Text(
               "Smart Farm",
-              style: TextStyle(
-                color: Colors.green[800],
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.primary,
                 fontWeight: FontWeight.w600,
-                fontSize: 20,
               ),
             ),
           ],
@@ -84,15 +78,15 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: colorScheme.surface.withOpacity(0.9),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.green.withOpacity(0.2),
+                color: colorScheme.primary.withOpacity(0.2),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.1),
+                  color: colorScheme.primary.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -104,15 +98,15 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
                 borderRadius: BorderRadius.circular(14),
                 gradient: LinearGradient(
                   colors: [
-                    Colors.green.withOpacity(0.8),
-                    Colors.green[600]!.withOpacity(0.9),
+                    colorScheme.primary.withOpacity(0.8),
+                    colorScheme.secondary.withOpacity(0.9),
                   ],
                 ),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.green[700],
+              unselectedLabelColor: colorScheme.primary,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -121,28 +115,16 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
                 fontWeight: FontWeight.w500,
                 fontSize: 13,
               ),
-              tabs: [
+              tabs: const [
                 Tab(
                   height: 40,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.precision_manufacturing_rounded, size: 18),
-                      const SizedBox(width: 6),
-                      const Text("Motors & Valves"),
-                    ],
-                  ),
+                  icon: Icon(Icons.precision_manufacturing_rounded, size: 18),
+                  text: "Motors & Valves",
                 ),
                 Tab(
                   height: 40,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.schedule_rounded, size: 18),
-                      const SizedBox(width: 6),
-                      const Text("Schedule"),
-                    ],
-                  ),
+                  icon: Icon(Icons.schedule_rounded, size: 18),
+                  text: "Schedule",
                 ),
               ],
             ),
@@ -151,139 +133,80 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.green[400]!.withOpacity(0.9),
-                    Colors.green[600]!.withOpacity(0.9),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.green.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Get.to(
+                  () => ValveGroupPage(
+                    farmId: widget.farmId,
+                    token: widget.token,
                   ),
-                ],
+                );
+              },
+              icon: const Icon(Icons.account_tree_rounded, size: 18),
+              label: const Text(
+                "Valve Grouping",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
-              child: ElevatedButton(
-                onPressed: () {
-                  Get.to(
-                    () => ValveGroupPage(
-                      farmId: widget.farmId,
-                      token: widget.token,
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.account_tree_rounded, size: 18),
-                    const SizedBox(width: 6),
-                    const Text(
-                      "Valve Grouping",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 4,
+                shadowColor: colorScheme.primary.withOpacity(0.3),
               ),
             ),
           ),
         ],
       ),
-      body: Container(
-        // decoration: BoxDecoration(
-        //   gradient: LinearGradient(
-        //     begin: Alignment.topCenter,
-        //     end: Alignment.bottomCenter,
-        //     colors: [
-        //       Colors.green.withOpacity(0.05),
-        //       Colors.white.withOpacity(0.9),
-        //       Colors.green.withOpacity(0.02),
-        //     ],
-        //   ),
-        // ),
-        child: Padding(
-          padding: const EdgeInsets.only(
-            top: 120,
-          ), // Account for transparent app bar
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              /// Tab 1: Motor and Valve List
-              Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: MotorListTab(
-                    farmId: widget.farmId,
-                    token: widget.token,
-                  ),
-                ),
-              ),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 120),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            /// 🌿 Tab 1: Motors & Valves
+            _buildThemedContainer(
+              theme,
+              MotorListTab(farmId: widget.farmId, token: widget.token),
+            ),
 
-              /// Tab 2: Schedule Page
-              Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: SchedulePage(
-                    farmId: widget.farmId,
-                    token: widget.token,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            /// 🕒 Tab 2: Schedule
+            _buildThemedContainer(
+              theme,
+              SchedulePage(farmId: widget.farmId, token: widget.token),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  /// Reusable themed card container for tab content
+  Widget _buildThemedContainer(ThemeData theme, Widget child) {
+    final colorScheme = theme.colorScheme;
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(20), child: child),
     );
   }
 }
