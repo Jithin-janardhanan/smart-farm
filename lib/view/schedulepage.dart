@@ -16,20 +16,23 @@ class SchedulePage extends StatelessWidget {
       ScheduleController(farmId: farmId, token: token),
     );
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: colorScheme.background,
       floatingActionButton: Obx(
         () => FloatingActionButton.extended(
           backgroundColor: controller.showCreateForm.value
-              ? Colors.redAccent
-              : Colors.green.shade700,
+              ? colorScheme.error
+              : colorScheme.primary,
           icon: Icon(
             controller.showCreateForm.value ? Icons.close : Icons.add,
-            color: Colors.white,
+            color: colorScheme.onPrimary,
           ),
           label: Text(
             controller.showCreateForm.value ? "Cancel" : "Create Schedule",
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: colorScheme.onPrimary),
           ),
           onPressed: () {
             controller.showCreateForm.toggle();
@@ -39,10 +42,13 @@ class SchedulePage extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(color: colorScheme.primary),
+          );
         }
 
         return RefreshIndicator(
+          color: colorScheme.primary,
           onRefresh: () => controller.fetchSchedules(),
           child: ListView(
             controller: scrollController,
@@ -61,21 +67,22 @@ class SchedulePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // --- LIST OF SCHEDULES ---
-              const Text(
+              Text(
                 "Scheduled Entries",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
 
               Obx(() {
                 if (controller.schedules.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20.0),
+                  return Padding(
+                    padding: const EdgeInsets.all(20.0),
                     child: Center(
                       child: Text(
                         "No schedules found.",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ),
                   );
@@ -84,6 +91,7 @@ class SchedulePage extends StatelessWidget {
                 return Column(
                   children: controller.schedules.map((schedule) {
                     return Card(
+                      color: colorScheme.surface,
                       elevation: 3,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(
@@ -101,23 +109,27 @@ class SchedulePage extends StatelessWidget {
                                 children: [
                                   Text(
                                     "Motor ID: ${schedule.motorId}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     "Start: ${schedule.startDate} ${schedule.startTime}",
+                                    style: theme.textTheme.bodyMedium,
                                   ),
                                   Text(
                                     "End: ${schedule.endDate} ${schedule.endTime}",
+                                    style: theme.textTheme.bodyMedium,
                                   ),
                                   if (schedule.valveGroupId != null)
                                     Text(
                                       "Valve Group: ${schedule.valveGroupId}",
+                                      style: theme.textTheme.bodyMedium,
                                     ),
-                                  Text("Valves: ${schedule.valves.join(', ')}"),
+                                  Text(
+                                    "Valves: ${schedule.valves.join(', ')}",
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
                                   if (schedule.skipStatus)
                                     Container(
                                       margin: const EdgeInsets.only(top: 6),
@@ -126,13 +138,13 @@ class SchedulePage extends StatelessWidget {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.shade100,
+                                        color: colorScheme.errorContainer,
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         "Skipped Today",
                                         style: TextStyle(
-                                          color: Colors.red,
+                                          color: colorScheme.onErrorContainer,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -145,9 +157,9 @@ class SchedulePage extends StatelessWidget {
                             Column(
                               children: [
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.edit,
-                                    color: Colors.blue,
+                                    color: colorScheme.primary,
                                   ),
                                   onPressed: () {
                                     controller.loadScheduleForEdit(schedule);
@@ -155,9 +167,9 @@ class SchedulePage extends StatelessWidget {
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.delete,
-                                    color: Colors.redAccent,
+                                    color: colorScheme.error,
                                   ),
                                   onPressed: () {
                                     Get.defaultDialog(
@@ -166,7 +178,7 @@ class SchedulePage extends StatelessWidget {
                                           "Are you sure you want to delete this schedule?",
                                       textConfirm: "Yes",
                                       textCancel: "No",
-                                      confirmTextColor: Colors.white,
+                                      confirmTextColor: colorScheme.onPrimary,
                                       onConfirm: () {
                                         controller.deleteSchedule(schedule.id);
                                         Get.back();
@@ -181,7 +193,9 @@ class SchedulePage extends StatelessWidget {
                                     schedule.skipStatus
                                         ? "Undo Skip"
                                         : "Skip Today",
-                                    style: const TextStyle(fontSize: 13),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.secondary,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -200,12 +214,16 @@ class SchedulePage extends StatelessWidget {
     );
   }
 
-  /// 🧩 BUILD THE CREATE/EDIT FORM SECTION
+  /// 🧩 CREATE/EDIT FORM
   Widget _buildScheduleForm(
     BuildContext context,
     ScheduleController controller,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
+      color: colorScheme.surface,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -213,13 +231,18 @@ class SchedulePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Select Motor",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
+
+            // --- Motor List ---
             ...controller.inMotors.map(
               (motor) => RadioListTile<int>(
+                activeColor: colorScheme.primary,
                 title: Text(motor.name),
                 subtitle: const Text("IN Motor"),
                 value: motor.id,
@@ -229,6 +252,7 @@ class SchedulePage extends StatelessWidget {
             ),
             ...controller.outMotors.map(
               (motor) => RadioListTile<int>(
+                activeColor: colorScheme.primary,
                 title: Text(motor.name),
                 subtitle: const Text("OUT Motor"),
                 value: motor.id,
@@ -236,13 +260,17 @@ class SchedulePage extends StatelessWidget {
                 onChanged: (val) => controller.selectedMotorId.value = val,
               ),
             ),
+
             const Divider(),
 
-            const Text(
+            Text(
               "Grouped Valves",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
+
             Wrap(
               spacing: 8,
               children: controller.groupedValves.map((group) {
@@ -251,16 +279,26 @@ class SchedulePage extends StatelessWidget {
                   label: Text(group.name),
                   selected: isSelected,
                   onSelected: (_) => controller.selectGroup(group.id),
+                  selectedColor: colorScheme.primaryContainer,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? colorScheme.onPrimaryContainer
+                        : theme.textTheme.bodyMedium?.color,
+                  ),
                 );
               }).toList(),
             ),
+
             const Divider(),
 
-            const Text(
+            Text(
               "Individual Valves",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
+
             Wrap(
               spacing: 6,
               children: [
@@ -270,6 +308,12 @@ class SchedulePage extends StatelessWidget {
                     selected: controller.selectedValveIds.contains(valve.id),
                     onSelected: (_) =>
                         controller.toggleValveSelection(valve.id),
+                    selectedColor: colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                      color: controller.selectedValveIds.contains(valve.id)
+                          ? colorScheme.onSecondaryContainer
+                          : theme.textTheme.bodyMedium?.color,
+                    ),
                   ),
                 ),
                 ...controller.outValves.map(
@@ -278,16 +322,26 @@ class SchedulePage extends StatelessWidget {
                     selected: controller.selectedValveIds.contains(valve.id),
                     onSelected: (_) =>
                         controller.toggleValveSelection(valve.id),
+                    selectedColor: colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                      color: controller.selectedValveIds.contains(valve.id)
+                          ? colorScheme.onSecondaryContainer
+                          : theme.textTheme.bodyMedium?.color,
+                    ),
                   ),
                 ),
               ],
             ),
+
             const Divider(),
 
-            const Text(
+            Text(
               "Select Dates",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
+
             Row(
               children: [
                 Expanded(
@@ -340,12 +394,16 @@ class SchedulePage extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
 
-            const Text(
+            Text(
               "Select Time",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
+
             Row(
               children: [
                 Expanded(
@@ -388,13 +446,14 @@ class SchedulePage extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
+                  backgroundColor: colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: () async {
@@ -413,7 +472,10 @@ class SchedulePage extends StatelessWidget {
                     controller.editingScheduleId.value != null
                         ? "Update Schedule"
                         : "Submit Schedule",
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ),
