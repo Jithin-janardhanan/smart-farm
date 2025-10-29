@@ -8,6 +8,7 @@ import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
 import 'package:smartfarm/model/profile_model.dart';
 import 'package:smartfarm/model/schedule_model.dart';
+import 'package:smartfarm/model/telemetry_data.model.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/model/create_group.dart';
@@ -112,6 +113,23 @@ class ApiService {
       throw Exception("Failed to fetch live data");
     }
   }
+static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) async {
+  final url = Uri.parse('https://1lt3jcdb-8000.inc1.devtunnels.ms/api/farm/$farmId/telemetry/graph/');
+
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
+
+  final response = await http.get(url, headers: headers);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = json.decode(response.body);
+    return data.map((item) => TelemetryData.fromJson(item)).toList();
+  } else {
+    throw Exception("Failed to fetch telemetry data");
+  }
+}
 
   // UPDATE PROFILE
   static Future<bool> updateFarmerProfile(
@@ -592,5 +610,7 @@ class ApiService {
       if (e is Exception) rethrow;
       throw Exception('Network error during logout: ${e.toString()}');
     }
+ 
   }
+  
 }
