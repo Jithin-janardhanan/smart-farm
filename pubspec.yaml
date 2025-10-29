@@ -1,6 +1,6 @@
 name: smartfarm
 description: "A new Flutter project."
-publish_to: 'none' 
+publish_to: "none"
 
 version: 1.0.0+3
 
@@ -18,7 +18,6 @@ dependencies:
   firebase_core: ^4.2.0
   firebase_messaging: ^16.0.3
   url_launcher: ^6.3.2
-  
 
 dev_dependencies:
   flutter_test:
@@ -32,9 +31,6 @@ flutter_launcher_icons:
   image_path: "assets/images/smartfarm_icon.png"
   adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/images/smartfarm_icon.png"
-  
-  
-  
 
 flutter:
   uses-material-design: true
@@ -43,4 +39,5 @@ flutter:
     - assets/images/premium.jpeg
     - assets/images/smartfarm_icon.png
     - assets/images/farmlogo.png
+    - assets/video/background.mp4
     - .env
