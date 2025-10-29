@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color background = Color(0xFFF8F9FA);
-  static const Color primaryColor = Color(0xFF2E7D32); // Used in ThemeData
-  static const Color primaryGreen = Color(0xFF2E7D32);
-  static const Color secondaryGreen = Color(0xFF4CAF50);
-  static const Color lightGreen = Color(0xFF81C784);
-  static const Color darkGreen = Color(0xFF1B5E20);
+  // 🌞 Light Theme
+  static const Color lightBackground = Color(0xFFF8F9FA);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightText = Color(0xFF212121);
+  static const Color lightSubText = Color(0xFF616161);
+  static const Color lightPrimary = Color(0xFF00C853);
+  static const Color lightAccent = Color(0xFF00FF88);
+
+  // 🌙 Dark Theme
+  static const Color darkBackground = Color(0xFF0E0E0E);
+  static const Color darkSurface = Color(0xFF1A1A1A);
+  static const Color darkText = Colors.white;
+  static const Color darkSubText = Colors.white70;
+  static const Color darkPrimary = Color(0xFF00C853);
+  static const Color darkAccent = Color(0xFF00FF88);
+
+  // Common Colors
   static const Color errorRed = Color(0xFFD32F2F);
-  static const Color white = Colors.white;
-  static const Color black = Colors.black; //
-  static const Color textGrey = Color(0xFF424242);
+  static const Color successGreen = Color(0xFF00E676);
 
-  static Color primaryGreenOpacity(double opacity) =>
-      primaryGreen.withOpacity(opacity);
+  // Gradient
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [lightAccent, lightPrimary],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
 
-  static Color secondaryGreenOpacity(double opacity) =>
-      secondaryGreen.withOpacity(opacity);
+  // Shadows
+  static List<BoxShadow> greenGlow = [
+    BoxShadow(
+      color: lightAccent.withOpacity(0.3),
+      blurRadius: 15,
+      offset: const Offset(0, 8),
+    ),
+  ];
 }
