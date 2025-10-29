@@ -32,6 +32,9 @@ flutter_launcher_icons:
   image_path: "assets/images/smartfarm_icon.png"
   adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/images/smartfarm_icon.png"
+  
+  
+  
 
 flutter:
   uses-material-design: true
@@ -39,4 +42,5 @@ flutter:
   assets:
     - assets/images/premium.jpeg
     - assets/images/smartfarm_icon.png
+    - assets/images/farmlogo.png
     - .env

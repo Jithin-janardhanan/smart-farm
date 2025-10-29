@@ -12,7 +12,6 @@ class ProfileController extends GetxController {
   var isLoading = false.obs;
 
   final formKey = GlobalKey<FormState>();
-
   final firstNamecrl = TextEditingController();
   final lastNamecrl = TextEditingController();
   final phoneNumbercrl = TextEditingController();

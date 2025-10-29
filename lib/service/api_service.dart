@@ -27,33 +27,30 @@ class ApiService {
     String phone,
     String password,
   ) async {
-    log("🚀 [login()] function called with:");
-    log("📞 Phone: $phone");
-    log("🔑 Password: $password");
 
-    log("🌍 Using baseUrl: $baseUrl");
+
+ 
 
     var url = Uri.parse('$baseUrl/farmer-login/');
     var headers = {'Content-Type': 'application/json'};
     var body = json.encode({"phone_number": phone, "password": password});
 
-    log("🌐 Full URL: $url");
-    log("📤 Sending body: $body");
+ 
 
     try {
       final response = await http.post(url, headers: headers, body: body);
 
-      log("📡 Login response [${response.statusCode}]: ${response.body}");
+     
 
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         String token = data['token'];
-        log("✅ Login successful! Token received: $token");
+      
 
         await FCMService.sendTokenToBackend(token);
         return data;
       } else {
-        log("❌ Login failed with status ${response.statusCode}");
+       
         throw Exception('Login failed: ${response.body}');
       }
     } catch (e, s) {
