@@ -149,7 +149,7 @@ class ScheduleController extends GetxController {
       return;
     }
 
-    try {
+    try { 
       final message = await ApiService.updateSchedule(
         scheduleId: scheduleId,
         token: token, // your auth token
