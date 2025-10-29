@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
@@ -50,7 +48,6 @@ class MotorListTab extends StatelessWidget {
       );
     });
   }
-  
 
   Widget _buildLiveDataCard() {
     return Card(
@@ -615,8 +612,32 @@ class MotorListTab extends StatelessWidget {
   }
 
   Widget _buildUngroupedValves() {
-  return Obx(() {
-    if (controller.ungroupedValves.isEmpty) {
+    return Obx(() {
+      if (controller.ungroupedValves.isEmpty) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Individual Valves",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildEmptyState(
+              "No individual valves available",
+              Icons.water_drop,
+            ),
+          ],
+        );
+      }
+
+      // ✅ Sort by ID (ascending). For descending just swap a.id with b.id
+      final sortedValves = controller.ungroupedValves.toList()
+        ..sort((a, b) => a.id.compareTo(b.id));
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -628,117 +649,92 @@ class MotorListTab extends StatelessWidget {
               color: Colors.grey.shade700,
             ),
           ),
-          const SizedBox(height: 8),
-          _buildEmptyState(
-            "No individual valves available",
-            Icons.water_drop,
+
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: sortedValves.length,
+            itemBuilder: (context, index) {
+              final valve = sortedValves[index];
+              final isOn = valve.status == "ON";
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 1,
+                  ),
+                  leading: Icon(
+                    isOn ? Icons.water_drop : Icons.water_drop_outlined,
+                    color: isOn ? Colors.blue : Colors.grey,
+                    size: 18,
+                  ),
+                  title: Text(
+                    valve.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "LoRa: ${valve.loraId}",
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                  trailing: Obx(() {
+                    final isLoading =
+                        controller.valveLoading[valve.id]?.value ?? false;
+                    if (isLoading) {
+                      return const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isOn ? "Open" : "Closed",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isOn
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                          ),
+                        ),
+                        Switch(
+                          value: isOn,
+                          onChanged: (_) {
+                            final newStatus = isOn ? "OFF" : "ON";
+                            controller.toggleValve(
+                              valveId: valve.id,
+                              status: newStatus,
+                              token: token,
+                              farmId: farmId,
+                            );
+                          },
+                          activeThumbColor: Colors.blue,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              );
+            },
           ),
         ],
       );
-    }
-
-    // ✅ Sort by ID (ascending). For descending just swap a.id with b.id
-    final sortedValves = controller.ungroupedValves.toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Individual Valves",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: sortedValves.length,
-          itemBuilder: (context, index) {
-            final valve = sortedValves[index];
-            final isOn = valve.status == "ON";
-
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 1,
-                ),
-                leading: Icon(
-                  isOn ? Icons.water_drop : Icons.water_drop_outlined,
-                  color: isOn ? Colors.blue : Colors.grey,
-                  size: 18,
-                ),
-                title: Text(
-                  valve.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                subtitle: Text(
-                  "LoRa: ${valve.loraId}",
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-                trailing: Obx(() {
-                  final isLoading =
-                      controller.valveLoading[valve.id]?.value ?? false;
-                  if (isLoading) {
-                    return const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  }
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isOn ? "Open" : "Closed",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isOn
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
-                        ),
-                      ),
-                      Switch(
-                        value: isOn,
-                        onChanged: (_) {
-                          final newStatus = isOn ? "OFF" : "ON";
-                          controller.toggleValve(
-                            valveId: valve.id,
-                            status: newStatus,
-                            token: token,
-                            farmId: farmId,
-                          );
-                        },
-                        activeThumbColor: Colors.blue,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  );
-                }),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  });
-}
-
+    });
+  }
 
   Widget _buildEmptyState(String message, IconData icon) {
     return Container(
@@ -762,5 +758,4 @@ class MotorListTab extends StatelessWidget {
       ),
     );
   }
-  
 }

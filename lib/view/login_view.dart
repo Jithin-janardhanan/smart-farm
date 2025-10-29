@@ -90,17 +90,20 @@ class LoginPage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          padding: EdgeInsets.all(isTablet ? 28 : 20),
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(isTablet ? 70 : 60),
-            boxShadow: AppColors.greenGlow,
-          ),
-          child: Image.asset(
-            'assets/images/farmlogo.png',
-            height: isTablet ? 100 : 80,
-            fit: BoxFit.contain,
+        SizedBox(
+          width: isTablet ? 140 : 120,
+          height: isTablet ? 140 : 120,
+          child: Container(
+            padding: EdgeInsets.all(isTablet ? 28 : 20),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(100), // full circle
+              boxShadow: AppColors.greenGlow,
+            ),
+            child: Image.asset(
+              'assets/images/farmlogo.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         SizedBox(height: isTablet ? 24 : 16),
