@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
+import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/view/curved_appbar.dart';
 import 'package:smartfarm/view/profile.dart';
 import 'package:smartfarm/view/tab_controller.dart';
@@ -12,6 +13,7 @@ class HomePage extends StatelessWidget {
   final FarmController farmController = Get.put(FarmController());
 
   HomePage({super.key, required this.token});
+
   Future<void> _launchPrivacyPolicy() async {
     final Uri url = Uri.parse(
       'https://www.freeprivacypolicy.com/live/51146187-bd61-4675-aff6-705c863a61f1',
@@ -21,7 +23,7 @@ class HomePage extends StatelessWidget {
     }
   }
 
-  Future<void> _launchfeedback() async {
+  Future<void> _launchFeedback() async {
     final Uri url = Uri.parse(
       'https://play.google.com/store/apps/details?id=com.agrita.app',
     );
@@ -37,83 +39,75 @@ class HomePage extends StatelessWidget {
     if (token != null) {
       Get.to(() => IoTDashboardPage(farmId: farmId, token: token));
     } else {
-      print("Token not found");
+      debugPrint("Token not found");
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.background,
       appBar: CurvedAppBar(),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width * 0.3,
       drawer: Drawer(
+        backgroundColor: colorScheme.surface,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Drawer Header
             DrawerHeader(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green[700]!, Colors.green[400]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
               ),
-              child: CircleAvatar(
+              child: Center(
                 child: Text(
                   "Agrita",
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 205, 14, 14),
+                  style: textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
                   ),
                 ),
               ),
             ),
-
-            // Drawer Items
-            ListTile(
-              leading: const Icon(Icons.home_outlined),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-              },
+            _buildDrawerItem(
+              icon: Icons.home_outlined,
+              title: 'Home',
+              colorScheme: colorScheme,
+              onTap: () => Navigator.pop(context),
             ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Profile'),
+            _buildDrawerItem(
+              icon: Icons.person_outline,
+              title: 'Profile',
+              colorScheme: colorScheme,
               onTap: () {
                 Navigator.pop(context);
                 Get.to(() => const ProfileView());
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.feedback_outlined),
-              title: const Text('feedback'),
-              onTap: _launchfeedback,
+            _buildDrawerItem(
+              icon: Icons.feedback_outlined,
+              title: 'Feedback',
+              colorScheme: colorScheme,
+              onTap: _launchFeedback,
             ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Privacy Policy'),
+            _buildDrawerItem(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+              colorScheme: colorScheme,
               onTap: _launchPrivacyPolicy,
             ),
-
-            // const Divider(),
-            // ListTile(
-            //   leading: const Icon(Icons.logout, color: Colors.red),
-            //   title: const Text('Logout', style: TextStyle(color: Colors.red)),
-            //   onTap: () {
-            //     // Handle logout
-            //   },
-            // ),
           ],
         ),
       ),
 
       body: Obx(() {
         if (farmController.isLoading.value) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           );
         }
@@ -121,10 +115,9 @@ class HomePage extends StatelessWidget {
         if (farmController.farms.isEmpty) {
           return RefreshIndicator(
             onRefresh: farmController.fetchFarms,
-            color: Colors.green,
+            color: colorScheme.primary,
             child: ListView(
-              physics:
-                  const AlwaysScrollableScrollPhysics(), // <-- allows pull even if empty
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.7,
@@ -135,23 +128,21 @@ class HomePage extends StatelessWidget {
                         Icon(
                           Icons.agriculture_outlined,
                           size: 80,
-                          color: Colors.grey[400],
+                          color: colorScheme.secondary.withOpacity(0.4),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No farms found',
-                          style: TextStyle(
+                          style: textTheme.bodyLarge?.copyWith(
                             fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Pull down to refresh',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -165,7 +156,7 @@ class HomePage extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: farmController.fetchFarms,
-          color: Colors.green,
+          color: colorScheme.primary,
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -181,22 +172,16 @@ class HomePage extends StatelessWidget {
                 onTap: () => navigateToMotors(farm.id),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    boxShadow: AppColors.greenGlow,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header with icon and emergency button
+                        // Header
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -204,12 +189,12 @@ class HomePage extends StatelessWidget {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.green[100],
+                                color: colorScheme.secondary.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Icon(
                                 Icons.agriculture,
-                                color: Colors.green[600],
+                                color: colorScheme.primary,
                                 size: 20,
                               ),
                             ),
@@ -217,14 +202,14 @@ class HomePage extends StatelessWidget {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: Colors.red[50],
+                                color: AppColors.errorRed.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: IconButton(
                                 padding: EdgeInsets.zero,
                                 icon: Icon(
                                   Icons.power_settings_new,
-                                  color: Colors.red[600],
+                                  color: AppColors.errorRed,
                                   size: 16,
                                 ),
                                 tooltip: "Emergency Stop",
@@ -232,11 +217,9 @@ class HomePage extends StatelessWidget {
                                   _showEmergencyDialog(
                                     context,
                                     farm.farmName,
-                                    () {
-                                      farmController.triggerEmergencyStop(
-                                        farm.id,
-                                      );
-                                    },
+                                    () => farmController.triggerEmergencyStop(
+                                      farm.id,
+                                    ),
                                   );
                                 },
                               ),
@@ -244,31 +227,30 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Farm name
                         Text(
                           farm.farmName,
-                          style: const TextStyle(
+                          style: textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
+                            color: colorScheme.onSurface,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 12),
-                        // Location
                         Row(
                           children: [
                             Icon(
                               Icons.location_on_outlined,
                               size: 14,
-                              color: Colors.grey[600],
+                              color: colorScheme.secondary,
                             ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 farm.location,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.7),
                                   fontSize: 12,
                                 ),
                                 maxLines: 1,
@@ -278,40 +260,38 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // Farm area
                         Row(
                           children: [
                             Icon(
                               Icons.landscape_outlined,
                               size: 14,
-                              color: Colors.grey[600],
+                              color: colorScheme.secondary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${farm.farmArea} acres',
-                              style: TextStyle(
-                                color: Colors.grey[600],
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurface.withOpacity(0.7),
                                 fontSize: 12,
                               ),
                             ),
                           ],
                         ),
                         const Spacer(),
-                        // Status indicator
                         Container(
                           width: double.infinity,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: Colors.green[50],
+                            color: colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
                             child: Text(
                               'Active',
-                              style: TextStyle(
-                                color: Colors.green[700],
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -328,15 +308,37 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required ColorScheme colorScheme,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: colorScheme.primary),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
   void _showEmergencyDialog(
     BuildContext context,
     String farmName,
     VoidCallback onConfirm,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -344,16 +346,23 @@ class HomePage extends StatelessWidget {
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.orange[600]),
               const SizedBox(width: 8),
-              const Text('Emergency Stop'),
+              Text(
+                'Emergency Stop',
+                style: TextStyle(color: colorScheme.onSurface),
+              ),
             ],
           ),
           content: Text(
             'Are you sure you want to trigger emergency stop for $farmName?',
+            style: TextStyle(color: colorScheme.onSurface.withOpacity(0.8)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: colorScheme.secondary),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -361,11 +370,8 @@ class HomePage extends StatelessWidget {
                 onConfirm();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
+                backgroundColor: AppColors.errorRed,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
               child: const Text('Stop'),
             ),
