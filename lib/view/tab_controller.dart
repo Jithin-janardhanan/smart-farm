@@ -190,7 +190,6 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
   Widget _buildThemedContainer(ThemeData theme, Widget child) {
     final colorScheme = theme.colorScheme;
     return Container(
-      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
