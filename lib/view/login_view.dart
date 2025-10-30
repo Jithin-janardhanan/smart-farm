@@ -16,7 +16,7 @@ class LoginPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isTablet = constraints.maxWidth > 600;
@@ -265,7 +265,7 @@ class LoginPage extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
                 ),
-              ).copyWith(elevation: MaterialStateProperty.all(0)),
+              ).copyWith(elevation: WidgetStateProperty.all(0)),
               child: Ink(
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,

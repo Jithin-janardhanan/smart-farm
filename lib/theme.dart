@@ -11,7 +11,6 @@ class AppTheme {
     colorScheme: ColorScheme.light(
       primary: AppColors.lightPrimary,
       secondary: AppColors.lightAccent,
-      background: AppColors.lightBackground,
       surface: AppColors.lightSurface,
       error: AppColors.errorRed,
     ),
@@ -48,7 +47,6 @@ class AppTheme {
     colorScheme: ColorScheme.dark(
       primary: AppColors.darkPrimary,
       secondary: AppColors.darkAccent,
-      background: AppColors.darkBackground,
       surface: AppColors.darkSurface,
       error: AppColors.errorRed,
     ),

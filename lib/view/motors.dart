@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
@@ -37,8 +38,11 @@ class MotorListTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              _buildTelemetryGraph(),
+
               _buildLiveDataCard(),
               const SizedBox(height: 24),
+
               _buildMotorsSection(),
               const SizedBox(height: 24),
               _buildValvesSection(),
@@ -47,6 +51,309 @@ class MotorListTab extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Widget _buildTelemetryGraph() {
+    return Obx(() {
+      final telemetryList = controller.telemetryData;
+      if (telemetryList.isEmpty) {
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: Text(
+                "No telemetry data available",
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Calculate min/max for better axis scaling
+      double minVoltage = double.infinity;
+      double maxVoltage = double.negativeInfinity;
+
+      for (var data in telemetryList) {
+        minVoltage = [
+          minVoltage,
+          data.voltageR,
+          data.voltageY,
+          data.voltageB,
+        ].reduce((a, b) => a < b ? a : b);
+        maxVoltage = [
+          maxVoltage,
+          data.voltageR,
+          data.voltageY,
+          data.voltageB,
+        ].reduce((a, b) => a > b ? a : b);
+      }
+
+      // Add padding to min/max
+      final voltageRange = maxVoltage - minVoltage;
+      minVoltage = minVoltage - (voltageRange * 0.1);
+      maxVoltage = maxVoltage + (voltageRange * 0.1);
+
+      return Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Voltage Graph",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "${telemetryList.length} readings",
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Legend
+              Wrap(
+                spacing: 16,
+                children: [
+                  _buildLegendItem(Colors.blue, "R Phase"),
+                  _buildLegendItem(Colors.amber, "Y Phase"),
+                  _buildLegendItem(Colors.red, "B Phase"),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 250,
+                child: LineChart(
+                  LineChartData(
+                    backgroundColor: Colors.white,
+                    minY: minVoltage,
+                    maxY: maxVoltage,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: true,
+                      horizontalInterval: (maxVoltage - minVoltage) / 5,
+                      verticalInterval: telemetryList.length > 10
+                          ? (telemetryList.length / 10).ceilToDouble()
+                          : 1,
+                      getDrawingHorizontalLine: (value) {
+                        return FlLine(
+                          color: Colors.grey.shade300,
+                          strokeWidth: 1,
+                        );
+                      },
+                      getDrawingVerticalLine: (value) {
+                        return FlLine(
+                          color: Colors.grey.shade200,
+                          strokeWidth: 1,
+                        );
+                      },
+                    ),
+                    titlesData: FlTitlesData(
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 42,
+                          interval: (maxVoltage - minVoltage) / 5,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toStringAsFixed(1) + 'V',
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: telemetryList.length > 6
+                              ? (telemetryList.length / 6).ceilToDouble()
+                              : 1,
+                          getTitlesWidget: (value, meta) {
+                            int index = value.toInt();
+                            if (index < 0 || index >= telemetryList.length) {
+                              return const SizedBox();
+                            }
+                            final date = telemetryList[index].timestamp;
+                            final formatted =
+                                "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatted,
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (touchedSpot) => Colors.black87,
+                        tooltipBorder: BorderSide(color: Colors.grey.shade700),
+                        tooltipPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        tooltipMargin: 8,
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            final index = spot.x.toInt();
+                            if (index >= 0 && index < telemetryList.length) {
+                              final data = telemetryList[index];
+                              String label = '';
+                              if (spot.barIndex == 0) label = 'R: ';
+                              if (spot.barIndex == 1) label = 'Y: ';
+                              if (spot.barIndex == 2) label = 'B: ';
+
+                              return LineTooltipItem(
+                                '$label${spot.y.toStringAsFixed(2)}V\n${data.timestamp.hour}:${data.timestamp.minute.toString().padLeft(2, '0')}',
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }
+                            return null;
+                          }).toList();
+                        },
+                      ),
+                      handleBuiltInTouches: true,
+                      getTouchedSpotIndicator: (barData, spotIndexes) {
+                        return spotIndexes.map((index) {
+                          return TouchedSpotIndicatorData(
+                            FlLine(
+                              color: Colors.grey.shade400,
+                              strokeWidth: 2,
+                              dashArray: [3, 3],
+                            ),
+                            FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  radius: 4,
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                  strokeColor: barData.color ?? Colors.blue,
+                                );
+                              },
+                            ),
+                          );
+                        }).toList();
+                      },
+                    ),
+                    lineBarsData: [
+                      // 🔵 Voltage R
+                      LineChartBarData(
+                        spots: telemetryList
+                            .asMap()
+                            .entries
+                            .map(
+                              (e) => FlSpot(
+                                e.key.toDouble(),
+                                e.value.voltageR.toDouble(),
+                              ),
+                            )
+                            .toList(),
+                        isCurved: true,
+                        curveSmoothness: 0.3,
+                        color: Colors.blue,
+                        barWidth: 2.5,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(show: false),
+                      ),
+                      // 🟡 Voltage Y
+                      LineChartBarData(
+                        spots: telemetryList
+                            .asMap()
+                            .entries
+                            .map(
+                              (e) => FlSpot(
+                                e.key.toDouble(),
+                                e.value.voltageY.toDouble(),
+                              ),
+                            )
+                            .toList(),
+                        isCurved: true,
+                        curveSmoothness: 0.3,
+                        color: Colors.amber,
+                        barWidth: 2.5,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(show: false),
+                      ),
+                      // 🔴 Voltage B
+                      LineChartBarData(
+                        spots: telemetryList
+                            .asMap()
+                            .entries
+                            .map(
+                              (e) => FlSpot(
+                                e.key.toDouble(),
+                                e.value.voltageB.toDouble(),
+                              ),
+                            )
+                            .toList(),
+                        isCurved: true,
+                        curveSmoothness: 0.3,
+                        color: Colors.red,
+                        barWidth: 2.5,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(show: false),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 20,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
   }
 
   Widget _buildLiveDataCard() {

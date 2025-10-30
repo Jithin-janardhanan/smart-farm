@@ -43,7 +43,7 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         elevation: 0,
