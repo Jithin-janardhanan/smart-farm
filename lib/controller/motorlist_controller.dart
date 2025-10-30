@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
+import 'package:smartfarm/model/telemetry_data.model.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/service/api_service.dart';
@@ -23,6 +24,12 @@ class MotorController extends GetxController {
   var motorLoading = <int, RxBool>{}.obs; // motorId -> isLoading
   var valveLoading = <int, RxBool>{}.obs; // valveId -> isLoading
   var groupLoading = <int, RxBool>{}.obs; // groupId -> isLoading
+
+    @override
+  void onInit() {
+    super.onInit();
+   
+  }
 
   Future<void> fetchMotorsAndValves(int farmId, String token) async {
     isLoading.value = true;
@@ -57,6 +64,7 @@ class MotorController extends GetxController {
       await Future.wait([
         fetchLiveData(token, farmId),
         fetchMotorsAndValves(farmId, token),
+        fetchTelemetryData(token, farmId),
       ]);
     } catch (e) {
       Get.snackbar(
@@ -69,33 +77,6 @@ class MotorController extends GetxController {
     }
   }
 
-  // Future<void> toggleMotor({
-  //   required int motorId,
-  //   required String status,
-  //   required int farmId,
-  //   required String token,
-  // }) async {
-  //   try {
-  //     final message = await ApiService.controlMotor(
-  //       motorId: motorId,
-  //       status: status,
-  //       token: token,
-  //     );
-
-  //     // update locally without re-fetching
-  //     final motor =
-  //         inMotors.firstWhereOrNull((m) => m.id == motorId) ??
-  //         outMotors.firstWhereOrNull((m) => m.id == motorId);
-  //     if (motor != null) {
-  //       motor.status.value = status;
-  //     }
-
-  //     Get.snackbar("Success", message,  colorText: Colors.green.shade800,
-  //     snackPosition: SnackPosition.BOTTOM);
-  //   } catch (e) {
-  //     Get.snackbar("Something went wrong", "Failed to toggle motor",colorText: Colors.red.shade800,snackPosition: SnackPosition.BOTTOM);
-  //   }
-  // }
   Future<void> toggleMotor({
     required int motorId,
     required String status,
@@ -163,6 +144,17 @@ class MotorController extends GetxController {
     }
   }
 
+  var telemetryData = <TelemetryData>[].obs;
+
+  Future<void> fetchTelemetryData(String token, int farmId) async {
+    try {
+      final result = await ApiService.getTelemetryData(token, farmId);
+      telemetryData.assignAll(result);
+    } catch (e) {
+      print("Error fetching telemetry data: $e");
+    }
+  }
+
   //Group Valve Control
 
   // Future<void> toggleValveGroup({
@@ -208,9 +200,13 @@ class MotorController extends GetxController {
 
       await fetchGroupedValves(token, farmId);
 
-      Get.snackbar("Success", msg,snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Success", msg, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      Get.snackbar("Oops", "Failed to toggle valve group",snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Oops",
+        "Failed to toggle valve group",
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       groupLoading[groupId]?.value = false;
     }
@@ -223,7 +219,11 @@ class MotorController extends GetxController {
       final valves = await ApiService.getUngroupedValves(token, farmId);
       ungroupedValves.value = valves;
     } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to fetch ungrouped valves",snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Something went wrong",
+        "Failed to fetch ungrouped valves",
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
   // individual Valve Control
@@ -273,7 +273,7 @@ class MotorController extends GetxController {
       await fetchGroupedValves(token, farmId);
       await fetchUngroupedValves(token, farmId);
 
-      Get.snackbar("Success", message,snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Success", message, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar(
         "Oops",

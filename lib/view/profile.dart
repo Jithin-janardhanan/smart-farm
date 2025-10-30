@@ -17,7 +17,7 @@ class ProfileView extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         elevation: 4,
         shadowColor: colorScheme.secondary.withOpacity(0.3),
@@ -54,7 +54,7 @@ class ProfileView extends StatelessWidget {
                 Text(
                   'Loading profile...',
                   style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onBackground.withOpacity(0.7),
+                    color: colorScheme.onSurface.withOpacity(0.7),
                     fontSize: isTablet ? 18 : 16,
                   ),
                 ),

@@ -113,8 +113,10 @@ class ApiService {
       throw Exception("Failed to fetch live data");
     }
   }
+
+  //graph
 static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) async {
-  final url = Uri.parse('https://1lt3jcdb-8000.inc1.devtunnels.ms/api/farm/$farmId/telemetry/graph/');
+  final url = Uri.parse('$baseUrl/farm/$farmId/telemetry/graph/');
 
   final headers = {
     'Authorization': 'Token $token',

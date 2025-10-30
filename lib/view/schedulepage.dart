@@ -20,7 +20,7 @@ class SchedulePage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       floatingActionButton: Obx(
         () => FloatingActionButton.extended(
           backgroundColor: controller.showCreateForm.value

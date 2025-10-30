@@ -49,7 +49,7 @@ class HomePage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: CurvedAppBar(),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width * 0.3,
       drawer: Drawer(
