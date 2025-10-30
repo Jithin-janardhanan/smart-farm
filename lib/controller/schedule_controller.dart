@@ -5,6 +5,7 @@ import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/schedule_model.dart';
 import 'package:smartfarm/model/valve_list.dart';
 import 'package:smartfarm/service/api_service.dart';
+import 'package:smartfarm/utils/snackbar_helper.dart' as SnackbarHelper;
 
 class ScheduleController extends GetxController {
   final int farmId;
@@ -30,12 +31,17 @@ class ScheduleController extends GetxController {
   var endTime = Rxn<TimeOfDay>();
   var schedules = <Schedule>[].obs;
   var showCreateForm = false.obs;
-
+  final RxBool isSubmitting = false.obs; // <-- loading flag
   @override
   void onInit() {
     super.onInit();
     loadAllData();
     fetchSchedules();
+  }
+
+  void loadScheduleForEditById(int scheduleId) {
+    final schedule = schedules.firstWhere((s) => s.id == scheduleId);
+    loadScheduleForEdit(schedule); // Reuse your existing method
   }
 
   Future<void> loadAllData() async {
@@ -84,7 +90,10 @@ class ScheduleController extends GetxController {
         endDate.value == null ||
         startTime.value == null ||
         endTime.value == null) {
-      Get.snackbar("Missing data", "Please fill all required fields");
+      SnackbarHelper.showThemedSnackbar(
+        "Missing data",
+        "Please fill all required fields",
+      );
       return;
     }
 
@@ -102,13 +111,23 @@ class ScheduleController extends GetxController {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Success", "Schedule submitted successfully");
+        SnackbarHelper.showThemedSnackbar(
+          "Success",
+          "Schedule submitted successfully",
+          isSuccess: true,
+        );
         fetchSchedules(); // Refresh list
       } else {
-        Get.snackbar("Something went wrong", response.body);
+        SnackbarHelper.showThemedSnackbar(
+          "Something went wrong",
+          response.body,
+        );
       }
     } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to submit schedule: $e");
+      SnackbarHelper.showThemedSnackbar(
+        "Something went wrong",
+        "Failed to submit schedule: $e",
+      );
     }
   }
 
@@ -121,7 +140,10 @@ class ScheduleController extends GetxController {
       );
       schedules.value = list;
     } catch (e) {
-      Get.snackbar("Something went wrong", "Failed to fetch schedules: $e");
+      SnackbarHelper.showThemedSnackbar(
+        "Something went wrong",
+        "Failed to fetch schedules: $e",
+      );
     } finally {
       isLoading.value = false;
     }
@@ -145,11 +167,14 @@ class ScheduleController extends GetxController {
         endDate.value == null ||
         startTime.value == null ||
         endTime.value == null) {
-      Get.snackbar("Missing data", "Please fill all required fields");
+      SnackbarHelper.showThemedSnackbar(
+        "Missing data",
+        "Please fill all required fields",
+      );
       return;
     }
 
-    try { 
+    try {
       final message = await ApiService.updateSchedule(
         scheduleId: scheduleId,
         token: token, // your auth token
@@ -163,13 +188,13 @@ class ScheduleController extends GetxController {
         endTimes: [formatTimeOfDay(endTime.value!)],
       );
 
-      Get.snackbar("Updated", message);
+      SnackbarHelper.showThemedSnackbar("Updated", message);
       await fetchSchedules(); // refresh after update
     } catch (e) {
-      Get.snackbar("Something went wrong", e.toString());
+      SnackbarHelper.showThemedSnackbar("Something went wrong", e.toString());
     }
   }
- 
+
   void loadScheduleForEdit(Schedule schedule) {
     selectedMotorId.value = schedule.motorId;
     selectedGroupId.value = schedule.valveGroupId;
@@ -194,33 +219,35 @@ class ScheduleController extends GetxController {
     editingScheduleId.value = schedule.id;
   }
 
-Future<void> deleteSchedule(int scheduleId) async {
+  Future<void> deleteSchedule(int scheduleId) async {
     try {
       isLoading.value = true;
       final deleted = await ApiService.deleteSchedule(token, scheduleId);
 
       if (deleted) {
-        Get.snackbar("Deleted", "Schedule deleted successfully");
+        SnackbarHelper.showThemedSnackbar(
+          "Deleted",
+          "Schedule deleted successfully",
+        );
         await fetchSchedules();
       }
     } catch (e) {
-      Get.snackbar("Something went wrong", e.toString());
+      SnackbarHelper.showThemedSnackbar("Something went wrong", e.toString());
     } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> toggleSkipStatus(int scheduleId) async {
-  try {
-    await ApiService.toggleSkipStatus(
-      token: token,
-      scheduleId: scheduleId,
-    );
-    Get.snackbar("Success", "Skip status updated successfully");
-    await fetchSchedules(); // refresh the list
-  } catch (e) {
-    Get.snackbar("Something went wrong", e.toString());
+    try {
+      await ApiService.toggleSkipStatus(token: token, scheduleId: scheduleId);
+      SnackbarHelper.showThemedSnackbar(
+        "Success",
+        "Skip status updated successfully",
+      );
+      await fetchSchedules(); // refresh the list
+    } catch (e) {
+      SnackbarHelper.showThemedSnackbar("Something went wrong", e.toString());
+    }
   }
-}
-
 }
