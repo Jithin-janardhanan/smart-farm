@@ -6,7 +6,7 @@ import 'package:smartfarm/model/telemetry_data.model.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/service/api_service.dart';
-import 'package:smartfarm/utils/snackbar_helper.dart'; // 👈 Import your reusable snackbar
+import 'package:smartfarm/utils/snackbar_helper.dart';
 
 class MotorController extends GetxController {
   var inMotors = <Motor>[].obs;
