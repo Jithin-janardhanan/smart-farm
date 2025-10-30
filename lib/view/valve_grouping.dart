@@ -19,14 +19,14 @@ class ValveGroupPage extends StatelessWidget {
     valveController.fetchValves(farmId, token);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Color.fromARGB(255, 222, 99, 99),
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
           'Valve Groups',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         foregroundColor: Colors.green[700],
         elevation: 0.5,
         actions: [
