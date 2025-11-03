@@ -6,7 +6,7 @@ class AppColors {
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightText = Color(0xFF212121);
   static const Color lightSubText = Color(0xFF616161);
-  static const Color lightPrimary = Color(0xFF00C853);
+  static const Color lightPrimary = Color(0xFF054204);
   static const Color lightAccent = Color(0xFF00FF88);
 
   // 🌙 Dark Theme

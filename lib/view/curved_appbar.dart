@@ -20,15 +20,7 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Container(
               height: preferredSize.height,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.green[700]!,
-                    Colors.green[500]!,
-                    Colors.green[300]!,
-                  ],
-                ),
+                color: Color(0xFF054204).withOpacity(0.9),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.green.withOpacity(0.3),
@@ -69,7 +61,11 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
             bottom: 10,
             child: Transform.rotate(
               angle: 0.5,
-              child: Icon(Icons.eco, color: Colors.green[900], size: 16),
+              child: Icon(
+                Icons.eco,
+                color: const Color.fromARGB(255, 7, 56, 10),
+                size: 16,
+              ),
             ),
           ),
 
