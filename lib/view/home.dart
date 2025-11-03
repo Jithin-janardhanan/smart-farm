@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
 import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/view/curved_appbar.dart';
+import 'package:smartfarm/view/notificationlog.dart';
 import 'package:smartfarm/view/profile.dart';
 import 'package:smartfarm/view/tab_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,7 +59,17 @@ class HomePage extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/images/Agriculture.jpeg"),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(
+                      0.3,
+                    ), // adds dark overlay for contrast
+                    BlendMode.darken,
+                  ),
+                ),
                 gradient: AppColors.primaryGradient,
               ),
               child: Center(
@@ -78,6 +89,16 @@ class HomePage extends StatelessWidget {
               colorScheme: colorScheme,
               onTap: () => Navigator.pop(context),
             ),
+            _buildDrawerItem(
+              icon: Icons.notifications_outlined,
+              title: 'Notifications',
+              colorScheme: colorScheme,
+              onTap: () {
+                Navigator.pop(context);
+                Get.to(() => NotificationPage());
+              },
+            ),
+
             _buildDrawerItem(
               icon: Icons.person_outline,
               title: 'Profile',

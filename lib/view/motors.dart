@@ -797,7 +797,7 @@ class MotorListTab extends StatelessWidget {
                   token: token,
                 );
               },
-              activeColor: colorScheme.primary,
+              activeThumbColor: colorScheme.primary,
             );
           }),
         ],
@@ -920,7 +920,7 @@ class MotorListTab extends StatelessWidget {
                   farmId: farmId,
                 );
               },
-              activeColor: colorScheme.secondary,
+              activeThumbColor: colorScheme.secondary,
             );
           }),
           children: group.valves
@@ -939,7 +939,7 @@ class MotorListTab extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1006,7 +1006,7 @@ class MotorListTab extends StatelessWidget {
                   farmId: farmId,
                 );
               },
-              activeColor: colorScheme.secondary,
+              activeThumbColor: colorScheme.secondary,
             );
           }),
         ],
@@ -1127,7 +1127,7 @@ class MotorListTab extends StatelessWidget {
                               farmId: farmId,
                             );
                           },
-                          activeColor: colorScheme.secondary,
+                          activeThumbColor: colorScheme.secondary,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -1150,7 +1150,7 @@ class MotorListTab extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.outline),
       ),

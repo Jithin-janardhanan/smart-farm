@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/group_valve_controller.dart';
 import 'package:smartfarm/controller/valve_controller.dart';
+import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 
 class ValveGroupPage extends StatelessWidget {
@@ -15,19 +16,34 @@ class ValveGroupPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
+    final surfaceColor = isDark
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subTextColor = isDark
+        ? AppColors.darkSubText
+        : AppColors.lightSubText;
+    final primaryColor = isDark
+        ? AppColors.darkPrimary
+        : AppColors.lightPrimary;
+
     groupController.fetchGroupedValves(token, farmId);
     valveController.fetchValves(farmId, token);
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 222, 99, 99),
+      backgroundColor: bgColor,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Valve Groups',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+          style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
         ),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        foregroundColor: Colors.green[700],
+        backgroundColor: surfaceColor,
+        foregroundColor: primaryColor,
         elevation: 0.5,
         actions: [
           Obx(
@@ -41,11 +57,11 @@ class ValveGroupPage extends StatelessWidget {
                 onPressed: () => groupController.toggleForm(),
                 style: IconButton.styleFrom(
                   backgroundColor: groupController.showForm.value
-                      ? Colors.red[100]
-                      : Colors.green[100],
+                      ? AppColors.errorRed.withOpacity(0.15)
+                      : primaryColor.withOpacity(0.15),
                   foregroundColor: groupController.showForm.value
-                      ? Colors.red[700]
-                      : Colors.green[700],
+                      ? AppColors.errorRed
+                      : primaryColor,
                 ),
               ),
             ),
@@ -71,6 +87,7 @@ class ValveGroupPage extends StatelessWidget {
         }
 
         return RefreshIndicator(
+          color: primaryColor,
           onRefresh: () async {
             await groupController.fetchGroupedValves(token, farmId);
             await valveController.fetchValves(farmId, token);
@@ -81,26 +98,31 @@ class ValveGroupPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Form Section
+                // 🌿 Form Section
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   height: groupController.showForm.value ? null : 0,
                   child: groupController.showForm.value
-                      ? _buildFormSection()
+                      ? _buildFormSection(
+                          surfaceColor,
+                          textColor,
+                          primaryColor,
+                          subTextColor,
+                        )
                       : const SizedBox(),
                 ),
 
-                // Groups List
+                // 🌿 Groups List Header
                 Row(
                   children: [
-                    Icon(Icons.widgets_outlined, color: Colors.grey[600]),
+                    Icon(Icons.widgets_outlined, color: subTextColor),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'Your Groups',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: textColor,
                       ),
                     ),
                     const Spacer(),
@@ -110,13 +132,13 @@ class ValveGroupPage extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${groupController.groupedValves.length}',
                         style: TextStyle(
-                          color: Colors.blue[700],
+                          color: primaryColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -126,10 +148,15 @@ class ValveGroupPage extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 if (groupController.groupedValves.isEmpty)
-                  _buildEmptyState()
+                  _buildEmptyState(primaryColor, subTextColor)
                 else
                   ...groupController.groupedValves.map(
-                    (group) => _buildGroupCard(group),
+                    (group) => _buildGroupCard(
+                      group,
+                      surfaceColor,
+                      textColor,
+                      subTextColor,
+                    ),
                   ),
               ],
             ),
@@ -139,19 +166,18 @@ class ValveGroupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFormSection() {
+  Widget _buildFormSection(
+    Color surfaceColor,
+    Color textColor,
+    Color primaryColor,
+    Color subTextColor,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.greenGlow,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -160,16 +186,17 @@ class ValveGroupPage extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.create_outlined, color: Colors.green[700]),
+                Icon(Icons.create_outlined, color: primaryColor),
                 const SizedBox(width: 8),
                 Obx(
                   () => Text(
                     groupController.editingGroup.value != null
                         ? 'Edit Group'
                         : 'Create New Group',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
+                      color: textColor,
                     ),
                   ),
                 ),
@@ -180,22 +207,25 @@ class ValveGroupPage extends StatelessWidget {
             // Group Name Input
             TextField(
               controller: groupController.groupNameController,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 labelText: 'Group Name',
+                labelStyle: TextStyle(color: subTextColor),
                 hintText: 'Enter a name for your valve group',
+                hintStyle: TextStyle(color: subTextColor.withOpacity(0.6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                prefixIcon: const Icon(Icons.label_outline),
+                prefixIcon: Icon(Icons.label_outline, color: primaryColor),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: surfaceColor.withOpacity(0.9),
               ),
             ),
 
             const SizedBox(height: 20),
 
             // Valve Selection
-            _buildValveSelection(),
+            _buildValveSelection(primaryColor, subTextColor),
 
             const SizedBox(height: 24),
 
@@ -209,7 +239,7 @@ class ValveGroupPage extends StatelessWidget {
                       ? null
                       : () => _handleSubmit(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
+                    backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -243,125 +273,105 @@ class ValveGroupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildValveSelection() {
+  Widget _buildValveSelection(Color primaryColor, Color subTextColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Select Valves',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: subTextColor,
+          ),
         ),
         const SizedBox(height: 12),
-
-        // In Valves
         if (valveController.inValves.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.input, size: 16, color: Colors.green[700]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Inlet Valves',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Obx(
-                  () => Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: valveController.inValves
-                        .map((valve) => _buildValveChip(valve))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
+          _buildValveSection(
+            title: 'Inlet Valves',
+            icon: Icons.input,
+            valves: valveController.inValves,
+            color: primaryColor,
           ),
           const SizedBox(height: 12),
         ],
-
-        // Out Valves
         if (valveController.outValves.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange[200]!),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.output, size: 16, color: Colors.orange[700]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Outlet Valves',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.orange[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Obx(
-                  () => Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: valveController.outValves
-                        .map((valve) => _buildValveChip(valve))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
+          _buildValveSection(
+            title: 'Outlet Valves',
+            icon: Icons.output,
+            valves: valveController.outValves,
+            color: Colors.orange,
           ),
         ],
       ],
     );
   }
 
-  Widget _buildValveChip(valve) {
+  Widget _buildValveSection({
+    required String title,
+    required IconData icon,
+    required List valves,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 4),
+              Text(
+                title,
+                style: TextStyle(fontWeight: FontWeight.w500, color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Obx(
+            () => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: valves
+                  .map((valve) => _buildValveChip(valve, color))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValveChip(valve, Color color) {
     return Obx(
       () => FilterChip(
         label: Text(valve.name),
         selected: groupController.selectedValveIds.contains(valve.id),
         onSelected: (_) => groupController.toggleValve(valve.id),
-        selectedColor: Colors.blue[100],
-        checkmarkColor: Colors.blue[700],
+        selectedColor: color.withOpacity(0.2),
+        checkmarkColor: color,
       ),
     );
   }
 
-  Widget _buildGroupCard(ValveGroup group) {
+  Widget _buildGroupCard(
+    ValveGroup group,
+    Color surfaceColor,
+    Color textColor,
+    Color subTextColor,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.greenGlow,
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -373,12 +383,12 @@ class ValveGroupPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: AppColors.lightPrimary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.widgets,
-                    color: Colors.green[700],
+                    color: AppColors.lightPrimary,
                     size: 20,
                   ),
                 ),
@@ -389,21 +399,22 @@ class ValveGroupPage extends StatelessWidget {
                     children: [
                       Text(
                         group.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${group.valves.length} valve${group.valves.length == 1 ? '' : 's'}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(color: subTextColor, fontSize: 14),
                       ),
                     ],
                   ),
                 ),
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                  icon: Icon(Icons.more_vert, color: subTextColor),
                   onSelected: (value) {
                     if (value == 'edit') {
                       groupController.startEditingGroup(group);
@@ -449,12 +460,12 @@ class ValveGroupPage extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: AppColors.lightPrimary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           valve.name,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 12, color: subTextColor),
                         ),
                       ),
                     )
@@ -467,33 +478,34 @@ class ValveGroupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color primaryColor, Color subTextColor) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.widgets_outlined, size: 64, color: Colors.grey[400]),
+          Icon(Icons.widgets_outlined, size: 64, color: subTextColor),
           const SizedBox(height: 16),
           Text(
             'No valve groups yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: subTextColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Create your first group to organize your valves',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: subTextColor.withOpacity(0.8)),
           ),
           const SizedBox(height: 20),
           TextButton.icon(
             onPressed: () => groupController.showForm.value = true,
             icon: const Icon(Icons.add),
             label: const Text('Create Group'),
+            style: TextButton.styleFrom(foregroundColor: primaryColor),
           ),
         ],
       ),
@@ -506,23 +518,15 @@ class ValveGroupPage extends StatelessWidget {
         token: token,
         farmId: farmId,
         onResult: (success) {
-          if (success) {
-            Get.snackbar(
-              'Success',
-              'Group updated successfully',
-              backgroundColor: Colors.green[100],
-              colorText: Colors.green[800],
-              snackPosition: SnackPosition.TOP,
-            );
-          } else {
-            Get.snackbar(
-              'Error',
-              'Failed to update group',
-              backgroundColor: Colors.red[100],
-              colorText: Colors.red[800],
-              snackPosition: SnackPosition.TOP,
-            );
-          }
+          Get.snackbar(
+            success ? 'Success' : 'Error',
+            success ? 'Group updated successfully' : 'Failed to update group',
+            backgroundColor: success
+                ? AppColors.successGreen.withOpacity(0.2)
+                : AppColors.errorRed.withOpacity(0.2),
+            colorText: success ? Colors.green[800] : Colors.red[800],
+            snackPosition: SnackPosition.TOP,
+          );
         },
       );
     } else {
@@ -530,23 +534,15 @@ class ValveGroupPage extends StatelessWidget {
         token: token,
         farmId: farmId,
         onResult: (success) {
-          if (success) {
-            Get.snackbar(
-              'Success',
-              'Group created successfully',
-              backgroundColor: Colors.green[100],
-              colorText: Colors.green[800],
-              snackPosition: SnackPosition.TOP,
-            );
-          } else {
-            Get.snackbar(
-              'Error',
-              'Failed to create group',
-              backgroundColor: Colors.red[100],
-              colorText: Colors.red[800],
-              snackPosition: SnackPosition.TOP,
-            );
-          }
+          Get.snackbar(
+            success ? 'Success' : 'Error',
+            success ? 'Group created successfully' : 'Failed to create group',
+            backgroundColor: success
+                ? AppColors.successGreen.withOpacity(0.2)
+                : AppColors.errorRed.withOpacity(0.2),
+            colorText: success ? Colors.green[800] : Colors.red[800],
+            snackPosition: SnackPosition.TOP,
+          );
         },
       );
     }
@@ -575,24 +571,18 @@ class ValveGroupPage extends StatelessWidget {
                 groupId: group.id,
                 farmId: farmId,
                 onResult: (success) {
-                  Get.back(); // Close dialog
-                  if (success) {
-                    Get.snackbar(
-                      'Deleted',
-                      'Group removed successfully',
-                      backgroundColor: Colors.green[100],
-                      colorText: Colors.green[800],
-                      snackPosition: SnackPosition.TOP,
-                    );
-                  } else {
-                    Get.snackbar(
-                      'Error',
-                      'Failed to delete group',
-                      backgroundColor: Colors.red[100],
-                      colorText: Colors.red[800],
-                      snackPosition: SnackPosition.TOP,
-                    );
-                  }
+                  Get.back();
+                  Get.snackbar(
+                    success ? 'Deleted' : 'Error',
+                    success
+                        ? 'Group removed successfully'
+                        : 'Failed to delete group',
+                    backgroundColor: success
+                        ? AppColors.successGreen.withOpacity(0.2)
+                        : AppColors.errorRed.withOpacity(0.2),
+                    colorText: success ? Colors.green[800] : Colors.red[800],
+                    snackPosition: SnackPosition.TOP,
+                  );
                 },
               );
             },
