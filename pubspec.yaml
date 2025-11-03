@@ -2,7 +2,7 @@ name: smartfarm
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.8.0
@@ -41,4 +41,5 @@ flutter:
     - assets/images/smartfarm_icon.png
     - assets/images/farmlogo.png
     - assets/video/background.mp4
+    - assets/images/Agriculture.jpeg
     - .env

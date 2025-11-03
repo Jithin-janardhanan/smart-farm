@@ -45,7 +45,7 @@ class SchedulePage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: colorScheme.primary,
         icon: const Icon(Icons.add),

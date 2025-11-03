@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:smartfarm/controller/notificition.dart';
+import 'package:smartfarm/controller/fcm.dart';
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
@@ -169,6 +169,24 @@ static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) as
       throw Exception('Failed to load farms: ${response.body}');
     }
   }
+
+// notification log get Api
+
+  static Future<List<Map<String, dynamic>>> getNotifications(String token) async {
+  final url = Uri.parse('$baseUrl/send-fcm-log/');
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json'
+  };
+
+  final response = await http.get(url, headers: headers);
+
+  if (response.statusCode == 200) {
+    return List<Map<String, dynamic>>.from(json.decode(response.body));
+  } else {
+    throw Exception('Failed to fetch notifications: ${response.reasonPhrase}');
+  }
+}
 
   //  To stop all the motors in any farm
 

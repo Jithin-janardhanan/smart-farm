@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/group_valve_controller.dart';
 import 'package:smartfarm/controller/valve_controller.dart';
+import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/utils/snackbar_helper.dart';
 
@@ -81,6 +82,7 @@ class ValveGroupPage extends StatelessWidget {
         }
 
         return RefreshIndicator(
+          color: primaryColor,
           onRefresh: () async {
             await groupController.fetchGroupedValves(token, farmId);
             await valveController.fetchValves(farmId, token);
@@ -91,7 +93,7 @@ class ValveGroupPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Form Section
+                // 🌿 Form Section
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   height: groupController.showForm.value ? null : 0,
@@ -196,9 +198,12 @@ class ValveGroupPage extends StatelessWidget {
             // Group Name Input
             TextField(
               controller: groupController.groupNameController,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 labelText: 'Group Name',
+                labelStyle: TextStyle(color: subTextColor),
                 hintText: 'Enter a name for your valve group',
+                hintStyle: TextStyle(color: subTextColor.withOpacity(0.6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: colorScheme.outline),
@@ -290,8 +295,6 @@ class ValveGroupPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // In Valves
         if (valveController.inValves.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(12),
@@ -331,8 +334,6 @@ class ValveGroupPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ],
-
-        // Out Valves
         if (valveController.outValves.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(12),
