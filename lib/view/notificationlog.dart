@@ -6,6 +6,8 @@ import 'package:smartfarm/controller/notification_log_controller.dart';
 class NotificationPage extends StatelessWidget {
   final NotificationController controller = Get.put(NotificationController());
 
+NotificationPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

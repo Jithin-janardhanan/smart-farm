@@ -148,7 +148,7 @@ class ValveGroupPage extends StatelessWidget {
                 else
                   ...groupController.groupedValves
                       .map((group) => _buildGroupCard(context, group))
-                      .toList(),
+                      ,
               ],
             ),
           ),
@@ -214,7 +214,7 @@ class ValveGroupPage extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
                 filled: true,
-                fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
               ),
             ),
 
@@ -353,7 +353,7 @@ class ValveGroupPage extends StatelessWidget {
         onSelected: (_) => groupController.toggleValve(valve.id),
         selectedColor: colorScheme.primaryContainer,
         checkmarkColor: colorScheme.primary,
-        backgroundColor: colorScheme.surfaceVariant.withOpacity(0.3),
+        backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         labelStyle: TextStyle(
           color: groupController.selectedValveIds.contains(valve.id)
               ? colorScheme.onPrimaryContainer
@@ -460,7 +460,7 @@ class ValveGroupPage extends StatelessWidget {
                     .map(
                       (valve) => Chip(
                         label: Text(valve.name),
-                        backgroundColor: colorScheme.surfaceVariant.withOpacity(
+                        backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(
                           0.4,
                         ),
                       ),
