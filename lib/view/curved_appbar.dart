@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:smartfarm/model/colors_model.dart';
 import 'package:smartfarm/view/profile.dart';
 
 class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -10,6 +11,9 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final isDark = theme.brightness == Brightness.dark;
     return SizedBox(
       height: preferredSize.height,
       child: Stack(
@@ -20,15 +24,8 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Container(
               height: preferredSize.height,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.green[700]!,
-                    Colors.green[500]!,
-                    Colors.green[300]!,
-                  ],
-                ),
+                color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+
                 boxShadow: [
                   BoxShadow(
                     color: Colors.green.withOpacity(0.3),
@@ -69,7 +66,11 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
             bottom: 10,
             child: Transform.rotate(
               angle: 0.5,
-              child: Icon(Icons.eco, color: Colors.green[900], size: 16),
+              child: Icon(
+                Icons.eco,
+                color: const Color.fromARGB(255, 7, 56, 10),
+                size: 16,
+              ),
             ),
           ),
 
