@@ -6,15 +6,15 @@ class AppColors {
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightText = Color(0xFF212121);
   static const Color lightSubText = Color(0xFF616161);
-  static const Color lightPrimary = Color(0xFF054204);
-  static const Color lightAccent = Color(0xFF00FF88);
+  static const Color lightPrimary = Color.fromARGB(161, 5, 66, 4);
+  static const Color lightAccent = Color.fromARGB(202, 5, 135, 3);
 
   // 🌙 Dark Theme
   static const Color darkBackground = Color(0xFF0E0E0E);
   static const Color darkSurface = Color(0xFF1A1A1A);
   static const Color darkText = Colors.white;
   static const Color darkSubText = Colors.white70;
-  static const Color darkPrimary = Color(0xFF00C853);
+  static const Color darkPrimary = Color.fromARGB(224, 6, 182, 79);
   static const Color darkAccent = Color(0xFF00FF88);
 
   // Common Colors
@@ -23,7 +23,7 @@ class AppColors {
 
   // Gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [lightAccent, lightPrimary],
+    colors: [lightPrimary, lightPrimary],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
