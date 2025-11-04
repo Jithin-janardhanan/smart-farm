@@ -96,7 +96,8 @@ class LoginPage extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(isTablet ? 28 : 20),
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
+              color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+
               borderRadius: BorderRadius.circular(100), // full circle
               boxShadow: AppColors.greenGlow,
             ),
@@ -112,7 +113,7 @@ class LoginPage extends StatelessWidget {
           style: TextStyle(
             fontSize: isTablet ? 36 : 28,
             fontWeight: FontWeight.bold,
-            color: AppColors.lightAccent,
+            color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
             letterSpacing: 1.5,
           ),
         ),
@@ -249,7 +250,10 @@ class LoginPage extends StatelessWidget {
 
   // 🔹 Login Button
   Widget _buildLoginButton(BuildContext context, bool isTablet) {
+    final theme = Theme.of(context);
+
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return controller.isLoading.value
         ? CircularProgressIndicator(color: colorScheme.secondary)
@@ -268,7 +272,8 @@ class LoginPage extends StatelessWidget {
               ).copyWith(elevation: WidgetStateProperty.all(0)),
               child: Ink(
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+
                   borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
                   boxShadow: AppColors.greenGlow,
                 ),
