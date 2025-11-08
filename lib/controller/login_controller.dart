@@ -124,62 +124,7 @@ class LoginController extends GetxController {
     }
   }
 
-  // void login() async {
-  //   // Validate form before proceeding
-  //   if (!formKey.currentState!.validate()) {
-  //     Get.snackbar(
-  //       "Validation Something went wrong",
-  //       "Please fix the errors above",
-  //       backgroundColor: Colors.red.shade50,
-  //       colorText: Colors.red.shade800,
-  //       icon: Icon(Icons.error_outline, color: Colors.red.shade800),
-  //       snackPosition: SnackPosition.TOP,
-  //     );
-  //     return;
-  //   }
-
-  //   isLoading.value = true;
-
-  //   try {
-  //     final response = await ApiService.login(
-  //       phoneController.text.trim(),
-  //       passwordController.text.trim(),
-  //     );
-
-  //     final user = User.fromJson(response);
-
-  //     // ✅ Save token using SharedPreferences
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     await prefs.setString('token', user.token);
-  //     await prefs.setInt('user_id', user.userId);
-  //     await prefs.setInt('farmer_id', user.farmerId);
-  //     await prefs.setBool('isLoggedIn', true);
-  //     Get.put(FarmController());
-  //     Get.off(() => HomePage(token: user.token));
-
-  //     Get.snackbar(
-  //       "Success",
-  //       "Login successful!",
-  //       backgroundColor: Colors.green.shade50,
-  //       colorText: Colors.green.shade800,
-  //       icon: Icon(Icons.check_circle_outline, color: Colors.green.shade800),
-  //       snackPosition: SnackPosition.BOTTOM,
-  //     );
-  //     log("Token saved: ${user.token}");
-  //   } catch (e) {
-  //     log("debug:${e.toString()}");
-  //     Get.snackbar(
-  //       "Login Failed",
-  //       "Please check your credentials and try again",
-  //       backgroundColor: Colors.red.shade50,
-  //       colorText: Colors.red.shade800,
-  //       icon: Icon(Icons.error_outline, color: Colors.red.shade800),
-  //       snackPosition: SnackPosition.BOTTOM,
-  //     );
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
+  
 
   @override
   void onClose() {

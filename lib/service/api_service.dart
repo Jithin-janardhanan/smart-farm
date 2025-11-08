@@ -22,36 +22,25 @@ class ApiService {
     }
     return url;
   }
+
   //login
 
   static Future<Map<String, dynamic>> login(
     String phone,
     String password,
   ) async {
-
-
- 
-
     var url = Uri.parse('$baseUrl/farmer-login/');
     var headers = {'Content-Type': 'application/json'};
     var body = json.encode({"phone_number": phone, "password": password});
-
- 
-
     try {
       final response = await http.post(url, headers: headers, body: body);
-
-     
-
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         String token = data['token'];
-      
-
+        log(token);
         await FCMService.sendTokenToBackend(token);
         return data;
       } else {
-       
         throw Exception('Login failed: ${response.body}');
       }
     } catch (e, s) {
@@ -60,6 +49,8 @@ class ApiService {
       rethrow;
     }
   }
+
+  //send fcm token to backend
 
   static Future<void> sendFcmToken(String fcmToken, String token) async {
     try {
@@ -74,6 +65,53 @@ class ApiService {
       log("📡 FCM Token Response [${response.statusCode}]: ${response.body}");
     } catch (e) {
       log("🚨 Error sending FCM token: $e");
+    }
+  }
+
+  //forget password mail request
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request('POST', Uri.parse('$baseUrl/forgot-password/'));
+    request.body = json.encode({"email": email});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      return {"success": true, "data": json.decode(responseBody)};
+    } else {
+      final error = await response.stream.bytesToString();
+      return {
+        "success": false,
+        "message": error.isNotEmpty ? error : response.reasonPhrase,
+      };
+    }
+  }
+
+  //reset password
+
+  Future<Map<String, dynamic>> resetPassword(
+    String apiPath,
+    String newPassword,
+  ) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request('POST', Uri.parse('$baseUrl/$apiPath'));
+    request.body = json.encode({"new_password": newPassword});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      return {"success": true, "data": responseBody};
+    } else {
+      final error = await response.stream.bytesToString();
+      return {
+        "success": false,
+        "message": error.isNotEmpty ? error : response.reasonPhrase,
+      };
     }
   }
 
@@ -115,23 +153,26 @@ class ApiService {
   }
 
   //graph
-static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) async {
-  final url = Uri.parse('$baseUrl/farm/$farmId/telemetry/graph/');
+  static Future<List<TelemetryData>> getTelemetryData(
+    String token,
+    int farmId,
+  ) async {
+    final url = Uri.parse('$baseUrl/farm/$farmId/telemetry/graph/');
 
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  final response = await http.get(url, headers: headers);
+    final response = await http.get(url, headers: headers);
 
-  if (response.statusCode == 200) {
-    final List<dynamic> data = json.decode(response.body);
-    return data.map((item) => TelemetryData.fromJson(item)).toList();
-  } else {
-    throw Exception("Failed to fetch telemetry data");
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((item) => TelemetryData.fromJson(item)).toList();
+    } else {
+      throw Exception("Failed to fetch telemetry data");
+    }
   }
-}
 
   // UPDATE PROFILE
   static Future<bool> updateFarmerProfile(
@@ -170,23 +211,27 @@ static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) as
     }
   }
 
-// notification log get Api
+  // notification log get Api
 
-  static Future<List<Map<String, dynamic>>> getNotifications(String token) async {
-  final url = Uri.parse('$baseUrl/send-fcm-log/');
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json'
-  };
+  static Future<List<Map<String, dynamic>>> getNotifications(
+    String token,
+  ) async {
+    final url = Uri.parse('$baseUrl/send-fcm-log/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  final response = await http.get(url, headers: headers);
+    final response = await http.get(url, headers: headers);
 
-  if (response.statusCode == 200) {
-    return List<Map<String, dynamic>>.from(json.decode(response.body));
-  } else {
-    throw Exception('Failed to fetch notifications: ${response.reasonPhrase}');
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(json.decode(response.body));
+    } else {
+      throw Exception(
+        'Failed to fetch notifications: ${response.reasonPhrase}',
+      );
+    }
   }
-}
 
   //  To stop all the motors in any farm
 
@@ -324,27 +369,34 @@ static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) as
 
   // list out grouped valve
 
-  static Future<List<ValveGroup>> getGroupedValveList(
-    String token,
-    int farmId,
-  ) async {
-    final url = Uri.parse('$baseUrl/valve-groups/?farm_id=$farmId');
+ static Future<List<ValveGroup>> getGroupedValveList(
+  String token,
+  int farmId,
+) async {
+  final url = Uri.parse('$baseUrl/valve-groups/?farm_id=$farmId');
 
-    final headers = {
-      'Authorization': 'Token $token',
-      'Content-Type': 'application/json',
-    };
+  final headers = {
+    'Authorization': 'Token $token',
+    'Content-Type': 'application/json',
+  };
 
-    final response = await http.get(url, headers: headers);
+  log("Request URL: $url");
+  log("Request Headers: $headers");
 
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body);
+  final response = await http.get(url, headers: headers);
 
-      return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
-    } else {
-      throw Exception("Failed to fetch grouped valves: ${response.body}");
-    }
+  // Log status code and response
+  log("Status Code: ${response.statusCode}");
+  log("Response Body: ${response.body}");
+
+  if (response.statusCode == 200) {
+    final List<dynamic> jsonList = jsonDecode(response.body);
+    return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
+  } else {
+    throw Exception("Failed to fetch grouped valves: ${response.body}");
   }
+}
+
 
   //creating group request
 
@@ -515,6 +567,7 @@ static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) as
       'Content-Type': 'application/json',
     };
 
+    log("$url");
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
@@ -630,7 +683,5 @@ static Future<List<TelemetryData>> getTelemetryData(String token, int farmId) as
       if (e is Exception) rethrow;
       throw Exception('Network error during logout: ${e.toString()}');
     }
- 
   }
-  
 }

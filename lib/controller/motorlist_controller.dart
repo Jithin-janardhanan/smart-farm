@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
@@ -144,7 +146,10 @@ class MotorController extends GetxController {
       for (var group in groups) {
         groupToggleStates[group.id] = RxBool(group.isOn);
       }
-    } catch (e) {
+    } catch (e, s) {
+      log("Grouped valve error: $e");
+      log("Stacktrace: $s");
+
       showThemedSnackbar(
         "Something went wrong",
         "Failed to load grouped valves",

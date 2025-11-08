@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/login_controller.dart';
 import 'package:smartfarm/model/colors_model.dart';
+import 'package:smartfarm/view/forgot_password_view.dart';
 
 class LoginPage extends StatelessWidget {
   final LoginController controller = Get.put(LoginController());
@@ -159,17 +160,19 @@ class LoginPage extends StatelessWidget {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            // onPressed: controller.forgotPassword,
-            onPressed: () {},
-            child: Text(
-              "Forgot Password?",
-              style: TextStyle(
-                fontSize: isTablet ? 16 : 14,
-                color: Theme.of(context).colorScheme.primary,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
+  onPressed: () {
+    Get.to(() => ForgotPasswordView());
+  },
+  child: Text(
+    "Forgot Password?",
+    style: TextStyle(
+      fontSize: isTablet ? 16 : 14,
+      color: Theme.of(context).colorScheme.primary,
+      decoration: TextDecoration.underline,
+    ),
+  ),
+),
+
         ),
         SizedBox(height: isTablet ? 40 : 30),
         _buildLoginButton(context, isTablet),
