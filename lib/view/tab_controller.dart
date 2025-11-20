@@ -65,7 +65,7 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
           children: [
             const SizedBox(width: 12),
             Text(
-              "Smart Farm",
+              "Agrita",
               style: theme.textTheme.titleLarge?.copyWith(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.w600,

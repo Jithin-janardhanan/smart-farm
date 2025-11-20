@@ -102,10 +102,12 @@ class LoginPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(100), // full circle
               boxShadow: AppColors.greenGlow,
             ),
-            child: Image.asset(
-              'assets/images/farmlogo.png',
-              fit: BoxFit.contain,
-            ),
+            child: isDark
+                ? Image.asset('assets/images/farmlogo.png', fit: BoxFit.contain)
+                : Image.asset(
+                    'assets/images/Logo_2-Photoroom.png',
+                    fit: BoxFit.contain,
+                  ),
           ),
         ),
         SizedBox(height: isTablet ? 24 : 16),
@@ -160,19 +162,18 @@ class LoginPage extends StatelessWidget {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-  onPressed: () {
-    Get.to(() => ForgotPasswordView());
-  },
-  child: Text(
-    "Forgot Password?",
-    style: TextStyle(
-      fontSize: isTablet ? 16 : 14,
-      color: Theme.of(context).colorScheme.primary,
-      decoration: TextDecoration.underline,
-    ),
-  ),
-),
-
+            onPressed: () {
+              Get.to(() => ForgotPasswordView());
+            },
+            child: Text(
+              "Forgot Password?",
+              style: TextStyle(
+                fontSize: isTablet ? 16 : 14,
+                color: Theme.of(context).colorScheme.primary,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
         ),
         SizedBox(height: isTablet ? 40 : 30),
         _buildLoginButton(context, isTablet),

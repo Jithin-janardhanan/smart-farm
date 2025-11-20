@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Request notification permission after first frame
+    // Request notification permission after fiwhatrst frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await NotificationService.requestPermission();
       await NotificationService.getFcmToken();
