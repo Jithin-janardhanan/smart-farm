@@ -45,7 +45,7 @@ class MotorListTab extends StatelessWidget {
 
               _buildMotorsSection(context),
               const SizedBox(height: 24),
-              _buildValvesSection(context),
+              _buildValvesSection(context), 
             ],
           ),
         ),
