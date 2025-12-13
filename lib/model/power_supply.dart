@@ -6,7 +6,7 @@ class LiveData {
   final double currentR;
   final double currentY;
   final double currentB;
-
+final DateTime? lastHitTime; 
   LiveData({
     required this.id,
     required this.farmName,
@@ -14,6 +14,7 @@ class LiveData {
     required this.currentR,
     required this.currentY,
     required this.currentB,
+     this.lastHitTime,
   });
 
   factory LiveData.fromJson(Map<String, dynamic> json) {
@@ -34,6 +35,9 @@ class LiveData {
     currentR: currentList.isNotEmpty ? currentList[0] : 0.0,
     currentY: currentList.length > 1 ? currentList[1] : 0.0,
     currentB: currentList.length > 2 ? currentList[2] : 0.0,
+    lastHitTime: json['last_hit_time'] != null
+          ? DateTime.parse(json['last_hit_time'])
+          : null,
   );
 }
 
@@ -47,6 +51,7 @@ class LiveData {
       currentR: 0.0,
       currentY: 0.0,
       currentB: 0.0,
+      lastHitTime: null,
     );
   }
 }

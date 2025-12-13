@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
+import 'package:smartfarm/controller/notification_service.dart';
 import 'package:smartfarm/model/user_model.dart';
 import 'package:smartfarm/service/api_service.dart';
 import 'package:smartfarm/view/home.dart';
@@ -96,14 +97,22 @@ class LoginController extends GetxController {
       Get.off(() => HomePage(token: user.token));
 
       // Success message
-      Get.snackbar(
-        "Login Successful",
-        "Welcome back!",
-        backgroundColor: Colors.green.shade50,
-        colorText: Colors.green.shade800,
-        icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Get.snackbar(
+      //   "Login Successful",
+      //   "Welcome back!",
+      //   backgroundColor: Colors.green.shade50,
+      //   colorText: Colors.green.shade800,
+      //   icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+      //   snackPosition: SnackPosition.BOTTOM,
+      // );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await NotificationService.requestPermission();
+        await NotificationService.getFcmToken();
+        NotificationService.initializeListeners();
+
+        // After setting up notifications, navigate
+      });
     } catch (e) {
       String errorMessage = "Something went wrong. Please try again.";
 
@@ -123,8 +132,6 @@ class LoginController extends GetxController {
       isLoading.value = false;
     }
   }
-
-  
 
   @override
   void onClose() {

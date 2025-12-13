@@ -18,14 +18,15 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     // Request notification permission after fiwhatrst frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await NotificationService.requestPermission();
-      await NotificationService.getFcmToken();
-      NotificationService.initializeListeners();
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await NotificationService.requestPermission();
+    //   await NotificationService.getFcmToken();
+    //   NotificationService.initializeListeners();
 
-      // After setting up notifications, navigate
-      _navigate();
-    });
+    //   // After setting up notifications, navigate
+    //   _navigate();
+    // });
+    _navigate();
   }
 
   Future<void> _navigate() async {

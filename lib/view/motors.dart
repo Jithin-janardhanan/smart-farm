@@ -38,14 +38,39 @@ class MotorListTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _buildTelemetryGraph(context),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Show Telemetry Graph",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  Obx(
+                    () => Switch(
+                      value: controller.showTelemetryGraph.value,
+                      onChanged: (value) {
+                        controller.showTelemetryGraph.value = value;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 📊 Telemetry Graph (Visible Only If Enabled)
+              Obx(
+                () => controller.showTelemetryGraph.value
+                    ? _buildTelemetryGraph(context)
+                    : const SizedBox(height: .001),
+              ),
+              const SizedBox(height: 16),
 
               _buildLiveDataCard(context),
               const SizedBox(height: 24),
 
               _buildMotorsSection(context),
               const SizedBox(height: 24),
-              _buildValvesSection(context), 
+              _buildValvesSection(context),
             ],
           ),
         ),
@@ -391,20 +416,49 @@ class MotorListTab extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// 🔹 Top Row: Power Icon + Farm Name + Status + Refresh
-            Row(
-              children: [
-                // Power Icon
-                Obx(() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade300, // Clean border line
+          width: 1,
+        ),
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Obx(() {
+                final data = controller.liveData.value ?? LiveData.zero();
+                final isMotorRunning =
+                    !(data.voltage.every((v) => v == 0.0) &&
+                        data.currentR == 0.0 &&
+                        data.currentY == 0.0 &&
+                        data.currentB == 0.0);
+
+                return Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isMotorRunning
+                        ? colorScheme.primary
+                        : colorScheme.error,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isMotorRunning ? Icons.power : Icons.power_off,
+                    color: colorScheme.onPrimary,
+                    size: 20,
+                  ),
+                );
+              }),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Obx(() {
                   final data = controller.liveData.value ?? LiveData.zero();
                   final isMotorRunning =
                       !(data.voltage.every((v) => v == 0.0) &&
@@ -412,145 +466,114 @@ class MotorListTab extends StatelessWidget {
                           data.currentY == 0.0 &&
                           data.currentB == 0.0);
 
-                  return Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isMotorRunning
-                          ? colorScheme.primary
-                          : colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isMotorRunning ? Icons.power : Icons.power_off,
-                      color:
-                          colorScheme.onPrimary, // Use onPrimary for contrast
-                      size: 20,
-                    ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data.farmName,
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        isMotorRunning ? "System Running" : "System Offline",
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: isMotorRunning
+                              ? colorScheme.primary
+                              : colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (data.lastHitTime != null)
+                        Text(
+                          "Last Updated: ${data.lastHitTime!.toLocal().toString().substring(0, 19)}",
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                    ],
                   );
                 }),
-                const SizedBox(width: 12),
-
-                // Farm name + status
-                Expanded(
-                  child: Obx(() {
-                    final data = controller.liveData.value ?? LiveData.zero();
-                    final isMotorRunning =
-                        !(data.voltage.every((v) => v == 0.0) &&
-                            data.currentR == 0.0 &&
-                            data.currentY == 0.0 &&
-                            data.currentB == 0.0);
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          data.farmName,
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          isMotorRunning ? "System Running" : "System Offline",
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: isMotorRunning
-                                ? colorScheme.primary
-                                : colorScheme.error,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-
-                // Refresh Button
-                IconButton(
-                  onPressed: () => controller.fetchLiveData(token, farmId),
-                  icon: const Icon(Icons.refresh),
-                  style: IconButton.styleFrom(
-                    backgroundColor: colorScheme.surface,
-                    shape: const CircleBorder(),
-                    foregroundColor: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            /// 🔹 Values Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surface.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  if (theme.brightness == Brightness.light)
-                    BoxShadow(
-                      color: colorScheme.shadow.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
               ),
-              child: Obx(() {
-                final data = controller.liveData.value ?? LiveData.zero();
 
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDataItem(
-                            context,
-                            "Voltage",
-                            data.voltage
-                                .map((v) => '${v.toStringAsFixed(1)}V')
-                                .join(', '),
-                            Icons.electrical_services,
-                            colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDataItem(
-                            context,
-                            "Current R",
-                            "${data.currentR.toStringAsFixed(2)} A",
-                            Icons.circle,
-                            Colors.redAccent, // Keep phase-specific
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildDataItem(
-                            context,
-                            "Current Y",
-                            "${data.currentY.toStringAsFixed(2)} A",
-                            Icons.circle,
-                            Colors.amberAccent, // Keep phase-specific
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildDataItem(
-                            context,
-                            "Current B",
-                            "${data.currentB.toStringAsFixed(2)} A",
-                            Icons.circle,
-                            Colors.lightBlueAccent, // Keep phase-specific
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              }),
+              IconButton(
+                onPressed: () => controller.fetchLiveData(token, farmId),
+                icon: const Icon(Icons.refresh),
+                style: IconButton.styleFrom(
+                  backgroundColor: colorScheme.surface,
+                  shape: const CircleBorder(),
+                  foregroundColor: colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
             ),
-          ],
-        ),
+            child: Obx(() {
+              final data = controller.liveData.value ?? LiveData.zero();
+
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDataItem(
+                          context,
+                          "Voltage",
+                          data.voltage
+                              .map((v) => "${v.toStringAsFixed(1)}V")
+                              .join("   |   "),
+                          Icons.electrical_services,
+                          colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDataItem(
+                          context,
+                          "R",
+                          "${data.currentR.toStringAsFixed(2)} A",
+                          Icons.circle,
+                          Colors.redAccent,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildDataItem(
+                          context,
+                          "Y",
+                          "${data.currentY.toStringAsFixed(2)} A",
+                          Icons.circle,
+                          Colors.amberAccent,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildDataItem(
+                          context,
+                          "B",
+                          "${data.currentB.toStringAsFixed(2)} A",
+                          Icons.circle,
+                          Colors.lightBlueAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -599,7 +622,7 @@ class MotorListTab extends StatelessWidget {
         _buildSectionHeader(
           context,
           "Motors",
-          Icons.settings,
+          Icons.heat_pump_outlined,
           colorScheme.primary,
         ),
         const SizedBox(height: 12),
@@ -728,10 +751,11 @@ class MotorListTab extends StatelessWidget {
                   : colorScheme.onSurface.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.settings,
-              color: isOn ? colorScheme.primary : colorScheme.onSurfaceVariant,
-              size: 20,
+            child: Image.asset(
+              "assets/images/electric-motor.png",
+              height: 22,
+              width: 22,
+              // color: isOn ? colorScheme.primary : colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 12),
@@ -830,11 +854,7 @@ class MotorListTab extends StatelessWidget {
     return Obx(() {
       final groups = controller.groupedValves;
       if (groups.isEmpty) {
-        return _buildEmptyState(
-          context,
-          "No grouped valves available",
-          Icons.water_drop,
-        );
+        return const SizedBox.shrink(); // 👈 hides entire section
       }
 
       return Column(
@@ -1156,8 +1176,8 @@ class MotorListTab extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 28, color: colorScheme.onSurfaceVariant),
-          const SizedBox(height: 12),
+          // Icon(icon, size: 28, color: colorScheme.onSurfaceVariant),
+          // const SizedBox(height: 12),
           Text(
             message,
             style: textTheme.bodyMedium?.copyWith(

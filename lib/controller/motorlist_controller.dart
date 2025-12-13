@@ -21,10 +21,10 @@ class MotorController extends GetxController {
   Timer? _liveDataTimer;
   var isLoading = false.obs;
   var ungroupedValves = <Valve>[].obs;
-
   var motorLoading = <int, RxBool>{}.obs;
   var valveLoading = <int, RxBool>{}.obs;
   var groupLoading = <int, RxBool>{}.obs;
+  var showTelemetryGraph = false.obs; // default: visible
 
   @override
   void onInit() {
@@ -163,6 +163,7 @@ class MotorController extends GetxController {
 
   Future<void> fetchTelemetryData(String token, int farmId) async {
     isLoading.value = true;
+
     try {
       final result = await ApiService.getTelemetryData(token, farmId);
       telemetryData.assignAll(result);

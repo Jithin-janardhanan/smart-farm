@@ -61,7 +61,6 @@
 // farm_controller.dart
 import 'dart:async';
 import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/model/farms_model.dart';
