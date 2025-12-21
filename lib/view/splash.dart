@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smartfarm/controller/notification_service.dart';
 import 'package:smartfarm/view/home.dart';
 import 'package:smartfarm/view/login_view.dart';
 

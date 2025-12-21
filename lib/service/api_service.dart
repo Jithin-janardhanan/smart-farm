@@ -62,7 +62,9 @@ class ApiService {
       var body = json.encode({'fcm_token': fcmToken});
       var response = await http.post(url, headers: headers, body: body);
 
-      log("📡 FCM Token Response [${response.statusCode}]: ${response.body}");
+      log(
+        "📡 FCM Token save avunnund [${response.statusCode}]: ${response.body}",
+      );
     } catch (e) {
       log("🚨 Error sending FCM token: $e");
     }
@@ -369,34 +371,33 @@ class ApiService {
 
   // list out grouped valve
 
- static Future<List<ValveGroup>> getGroupedValveList(
-  String token,
-  int farmId,
-) async {
-  final url = Uri.parse('$baseUrl/valve-groups/?farm_id=$farmId');
+  static Future<List<ValveGroup>> getGroupedValveList(
+    String token,
+    int farmId,
+  ) async {
+    final url = Uri.parse('$baseUrl/valve-groups/?farm_id=$farmId');
 
-  final headers = {
-    'Authorization': 'Token $token',
-    'Content-Type': 'application/json',
-  };
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
-  log("Request URL: $url");
-  log("Request Headers: $headers");
+    log("Request URL: $url");
+    log("Request Headers: $headers");
 
-  final response = await http.get(url, headers: headers);
+    final response = await http.get(url, headers: headers);
 
-  // Log status code and response
-  log("Status Code: ${response.statusCode}");
-  log("Response Body: ${response.body}");
+    // Log status code and response
+    log("Status Code: ${response.statusCode}");
+    log("Response Body: ${response.body}");
 
-  if (response.statusCode == 200) {
-    final List<dynamic> jsonList = jsonDecode(response.body);
-    return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
-  } else {
-    throw Exception("Failed to fetch grouped valves: ${response.body}");
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to fetch grouped valves: ${response.body}");
+    }
   }
-}
-
 
   //creating group request
 
