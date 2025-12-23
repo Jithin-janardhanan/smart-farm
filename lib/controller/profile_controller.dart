@@ -1,8 +1,8 @@
-
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartfarm/controller/notification_service.dart';
 import 'package:smartfarm/model/profile_model.dart';
 import 'package:smartfarm/service/api_service.dart';
 import 'package:smartfarm/view/login_view.dart';
@@ -191,9 +191,12 @@ class ProfileController extends GetxController {
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-
+    String? fcmToken = await NotificationService.getFcmToken();
     try {
-      String message = await ApiService.logoutUser(token);
+      String message = await ApiService.logoutUser(
+        token: token,
+        fcmToken: fcmToken ?? "",
+      );
       await prefs.remove('token');
       Get.offAll(() => LoginPage());
       Get.snackbar("Success", message, snackPosition: SnackPosition.BOTTOM);

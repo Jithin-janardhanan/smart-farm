@@ -659,16 +659,20 @@ class ApiService {
 
   // LOGOUT
 
-  static Future<String> logoutUser(String token) async {
-    var url = Uri.parse('$baseUrl/logout/');
+  static Future<String> logoutUser({
+    required String token,
+    required String fcmToken,
+  }) async {
+    final url = Uri.parse('$baseUrl/logout/');
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         url,
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({'fcm_token': fcmToken}),
       );
 
       if (response.statusCode == 200) {
@@ -681,8 +685,7 @@ class ApiService {
         );
       }
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Network error during logout: ${e.toString()}');
+      throw Exception('Network error during logout: $e');
     }
   }
 }
