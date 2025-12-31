@@ -115,20 +115,27 @@ class MotorController extends GetxController {
         status: status,
         token: token,
       );
-
+      log("Motor control response message: $message");
       final motor =
           inMotors.firstWhereOrNull((m) => m.id == motorId) ??
           outMotors.firstWhereOrNull((m) => m.id == motorId);
 
       if (motor != null) motor.status.value = status;
 
-      showThemedSnackbar("Success", message, isSuccess: true);
-    } catch (e) {
+      // showThemedSnackbar("Activating Motor", message, isSuccess: true);
       showThemedSnackbar(
-        "Oops",
-        e.toString().replaceFirst("Exception: ", ""),
-        isError: true,
+        status == "ON" ? "Activating Motor" : "Deactivating Motor",
+        message,
+        isWarning: true, // ✅ YELLOW
       );
+    } catch (e) {
+      log("Motor toggle error: $e");
+
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '')
+          : 'Something went wrong';
+
+      showThemedSnackbar("Oops", errorMessage, isError: true);
     } finally {
       motorLoading[motorId]?.value = false;
     }
@@ -194,6 +201,7 @@ class MotorController extends GetxController {
       showThemedSnackbar("Success", msg, isSuccess: true);
     } catch (e) {
       showThemedSnackbar("Oops", "Failed to toggle valve group", isError: true);
+      print("Something went wrong: $e");
     } finally {
       groupLoading[groupId]?.value = false;
     }

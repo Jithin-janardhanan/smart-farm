@@ -23,7 +23,8 @@ class NotificationPage extends StatelessWidget {
   String _formatTime(String? dateTimeStr) {
     if (dateTimeStr == null || dateTimeStr.isEmpty) return '';
     try {
-      final dt = DateTime.parse(dateTimeStr);
+      final clean = dateTimeStr.split('+').first;
+      final dt = DateTime.parse(clean);
       return DateFormat('hh:mm a').format(dt); // 05:01 PM format
     } catch (e) {
       return '';

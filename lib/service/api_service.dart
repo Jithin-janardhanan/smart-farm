@@ -267,7 +267,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-
+      log("Motors and Valves Data: $data");
       return {
         'inMotors': List<Motor>.from(
           data['motors']['in'].map((m) => Motor.fromJson(m)),
@@ -291,7 +291,7 @@ class ApiService {
 
   static Future<String> controlMotor({
     required int motorId,
-    required String status, // "ON" or "OFF"
+    required String status,
     required String token,
   }) async {
     final url = Uri.parse('$baseUrl/motors/$motorId/manual-control/');
@@ -363,6 +363,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      log("Ungrouped Valves Data: $data");
       return (data as List).map((v) => Valve.fromJson(v)).toList();
     } else {
       throw Exception("Failed to fetch ungrouped valves");
@@ -482,6 +483,7 @@ class ApiService {
     required String status, // "ON" or "OFF"
     required String token,
   }) async {
+    log("Toggling Valve Group ID: $groupId to Status: $status");
     final url = Uri.parse('$baseUrl/valve-groups/$groupId/manual-control/');
     final headers = {
       'Authorization': 'Token $token',
@@ -489,13 +491,14 @@ class ApiService {
     };
 
     final body = json.encode({"status": status});
-
     final response = await http.post(url, headers: headers, body: body);
-
+    log(
+      "Valve Group Control Response [${response.statusCode}]: ${response.body}",
+    );
     if (response.statusCode == 200) {
       return jsonDecode(response.body)['message'] ?? 'Success';
     } else {
-      throw Exception('Failed to control valve group');
+      throw Exception('Failed to toggle valve group: ${response.reasonPhrase}');
     }
   }
 
@@ -517,6 +520,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      // log("Individual Valve Control Response: $data");
       return data['message'] ?? 'Valve $status successful';
     } else {
       throw Exception('Failed to toggle valve: ${response.reasonPhrase}');
