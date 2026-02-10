@@ -96,16 +96,7 @@ class LoginController extends GetxController {
       // Navigate to home page
       Get.off(() => HomePage(token: user.token));
 
-      // Success message
-      // Get.snackbar(
-      //   "Login Successful",
-      //   "Welcome back!",
-      //   backgroundColor: Colors.green.shade50,
-      //   colorText: Colors.green.shade800,
-      //   icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-      //   snackPosition: SnackPosition.BOTTOM,
-      // );
-
+    
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await NotificationService.requestPermission();
         await NotificationService.getFcmToken();

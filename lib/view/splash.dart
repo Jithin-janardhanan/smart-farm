@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartfarm/service/api_service.dart';
 import 'package:smartfarm/view/home.dart';
 import 'package:smartfarm/view/login_view.dart';
 
@@ -15,32 +16,37 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Request notification permission after fiwhatrst frame
-    // WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //   await NotificationService.requestPermission();
-    //   await NotificationService.getFcmToken();
-    //   NotificationService.initializeListeners();
-
-    //   // After setting up notifications, navigate
-    //   _navigate();
-    // });
     _navigate();
   }
 
+ 
+
+  Future<void> _logoutAndRedirect(SharedPreferences prefs) async {
+  await prefs.clear();
+  Get.offAll(() => LoginPage());
+}
+
+
   Future<void> _navigate() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    await Future.delayed(const Duration(seconds: 1));
+  await Future.delayed(const Duration(seconds: 1));
 
-    if (isLoggedIn && token != null && token.isNotEmpty) {
+  if (isLoggedIn && token != null && token.isNotEmpty) {
+    final isValid = await ApiService.verifyToken(token);
+
+    if (isValid) {
       Get.off(() => HomePage(token: token));
     } else {
-      Get.off(() => LoginPage());
+      await _logoutAndRedirect(prefs);
     }
+  } else {
+    Get.off(() => LoginPage());
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

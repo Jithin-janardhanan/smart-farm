@@ -2,7 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
+import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
+import 'package:smartfarm/view/confirmation_popup.dart';
 
 class MotorListTab extends StatelessWidget {
   final int farmId;
@@ -186,7 +188,7 @@ class MotorListTab extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// 🔹 Chart
+              /// 🔹 Chart'
               SizedBox(
                 height: 250,
                 child: LineChart(
@@ -496,15 +498,19 @@ class MotorListTab extends StatelessWidget {
                 }),
               ),
 
-              IconButton(
-                onPressed: () => controller.fetchLiveData(token, farmId),
-                icon: const Icon(Icons.refresh),
-                style: IconButton.styleFrom(
-                  backgroundColor: colorScheme.surface,
-                  shape: const CircleBorder(),
-                  foregroundColor: colorScheme.primary,
-                ),
-              ),
+              Obx(() {
+                return controller.isRefreshing.value
+                    ? const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        onPressed: () =>
+                            controller.fetchLiveData(token, farmId),
+                        icon: const Icon(Icons.refresh),
+                      );
+              }),
             ],
           ),
 
@@ -738,44 +744,52 @@ class MotorListTab extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final status = motor.status.value;
     final isOn = status == "ON";
+    final displayName = motor.display_name.value.trim();
+    final motorName = motor.name;
+    final loraId = motor.loraId.value;
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isOn
-                  ? colorScheme.primary.withOpacity(0.1)
-                  : colorScheme.onSurface.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Image.asset(
-              "assets/images/electric-motor.png",
-              height: 22,
-              width: 22,
-              // color: isOn ? colorScheme.primary : colorScheme.onSurfaceVariant,
+          GestureDetector(
+            onTap: () {
+              _showMotorSetupDialog(context, motor);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isOn
+                    ? colorScheme.primary.withOpacity(0.1)
+                    : colorScheme.onSurface.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.settings),
             ),
           ),
+
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  motor.name,
+                  displayName.isNotEmpty
+                      ? "$displayName ($motorName)"
+                      : motorName,
                   style: textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 4),
                 Text(
-                  'LoRa ID: ${motor.loraId}',
+                  'LoRa ID: $loraId',
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
+
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -812,18 +826,98 @@ class MotorListTab extends StatelessWidget {
             }
             return Switch(
               value: isOn,
+
+              // ── Replace the Switch onChanged block in _buildMotorCardContent ──────────
+              // (inside the Obx that wraps the Switch, around line 260 of motorlist_tab.dart)
               onChanged: (_) {
                 final newStatus = isOn ? "OFF" : "ON";
-                controller.toggleMotor(
-                  motorId: motor.id,
-                  status: newStatus,
-                  farmId: farmId,
-                  token: token,
-                );
+
+                if (newStatus == "ON") {
+                  showMotorConfirmationDialog(
+                    motorName: motor.name,
+                    onConfirm: () {
+                      // No timer — normal turn-on
+                      controller.toggleMotor(
+                        motorId: motor.id,
+                        status: "ON",
+                        farmId: farmId,
+                        token: token,
+                      );
+                    },
+                    onTimedConfirm: (int durationMinutes) {
+                      // Timer set — use timed-run API only
+                      controller.timedRunMotor(
+                        motorId: motor.id,
+                        durationMinutes: durationMinutes,
+                        farmId: farmId,
+                        token: token,
+                      );
+                    },
+                  );
+                } else {
+                  controller.toggleMotor(
+                    motorId: motor.id,
+                    status: "OFF",
+                    farmId: farmId,
+                    token: token,
+                  );
+                }
               },
+              // onChanged: (_) {
+              //   final newStatus = isOn ? "OFF" : "ON";
+              //   controller.toggleMotor(
+              //     motorId: motor.id,
+              //     status: newStatus,
+              //     farmId: farmId,
+              //     token: token,
+              //   );
+              // },
               activeThumbColor: colorScheme.primary,
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  void _showMotorSetupDialog(BuildContext context, Motor motor) {
+    final displayController = TextEditingController(
+      text: motor.displayname.value,
+    );
+    final loraController = TextEditingController(text: motor.loraId.value);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Motor Setup"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: displayController,
+              decoration: const InputDecoration(labelText: "Display Name"),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: loraController,
+              decoration: const InputDecoration(labelText: "LoRa ID"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              controller.updateMotorDetails(
+                motorId: motor.id,
+                displayName: displayController.text.trim(),
+                loraId: loraController.text.trim(),
+                token: token,
+              );
+              Get.back();
+            },
+            child: const Text("Save"),
+          ),
         ],
       ),
     );
@@ -1176,8 +1270,6 @@ class MotorListTab extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Icon(icon, size: 28, color: colorScheme.onSurfaceVariant),
-          // const SizedBox(height: 12),
           Text(
             message,
             style: textTheme.bodyMedium?.copyWith(

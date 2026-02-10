@@ -205,7 +205,7 @@ class ProfileController extends GetxController {
       Get.offAll(() => LoginPage());
       Get.snackbar(
         "Logout Warning",
-        "Logged out locally, but server logout failed",
+        "Logged out locally,",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,

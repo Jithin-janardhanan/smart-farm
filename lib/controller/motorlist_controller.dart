@@ -25,6 +25,11 @@ class MotorController extends GetxController {
   var valveLoading = <int, RxBool>{}.obs;
   var groupLoading = <int, RxBool>{}.obs;
   var showTelemetryGraph = false.obs; // default: visible
+  var isRefreshing = false.obs;
+  bool get isAnyMotorRunning {
+    return inMotors.any((m) => m.status.value == "ON") ||
+        outMotors.any((m) => m.status.value == "ON");
+  }
 
   @override
   void onInit() {
@@ -41,6 +46,53 @@ class MotorController extends GetxController {
       }
     } else {
       print("⚠️ No arguments passed to MotorController");
+    }
+  }
+
+  int convertToMinutes({required int value, required bool isHour}) {
+    return isHour ? value * 60 : value;
+  }
+
+  Future<void> updateMotorDetails({
+    required int motorId,
+    required String displayName,
+    required String loraId,
+    required String token,
+  }) async {
+    motorLoading[motorId] = true.obs;
+
+    try {
+      final response = await ApiService.patchMotor(
+        motorId: motorId,
+        token: token,
+        body: {"display_name": displayName, "lora_id": loraId},
+      );
+
+      // 🔥 Update local motor immediately
+      final motor =
+          inMotors.firstWhereOrNull((m) => m.id == motorId) ??
+          outMotors.firstWhereOrNull((m) => m.id == motorId);
+
+      if (motor != null) {
+        motor.displayname.value = displayName;
+        motor.loraId.value = loraId;
+      }
+
+      showThemedSnackbar(
+        "Success",
+        "Motor details updated successfully",
+        isSuccess: true,
+      );
+    } catch (e) {
+      log("Update motor error: $e");
+
+      showThemedSnackbar(
+        "Update Failed",
+        "Unable to update motor details",
+        isError: true,
+      );
+    } finally {
+      motorLoading[motorId]?.value = false;
     }
   }
 
@@ -186,11 +238,21 @@ class MotorController extends GetxController {
     required String token,
     required int farmId,
   }) async {
+    final currentStatus = groupToggleStates[groupId]?.value ?? false;
+    final newStatus = currentStatus ? "OFF" : "ON";
+
+    // 🚫 VALIDATION
+    if (newStatus == "OFF" && isAnyMotorRunning) {
+      showThemedSnackbar(
+        "Action Not Allowed",
+        "Please stop the motor before closing valve group",
+        isWarning: true,
+      );
+      return;
+    }
+
     groupLoading[groupId] = true.obs;
     try {
-      final currentStatus = groupToggleStates[groupId]?.value ?? false;
-      final newStatus = currentStatus ? "OFF" : "ON";
-
       final msg = await ApiService.controlValveGroup(
         groupId: groupId,
         status: newStatus,
@@ -226,6 +288,16 @@ class MotorController extends GetxController {
     required String token,
     required int farmId,
   }) async {
+    // 🚫 VALIDATION: Don't allow valve OFF when motor is ON
+    if (status == "OFF" && isAnyMotorRunning) {
+      showThemedSnackbar(
+        "Action Not Allowed",
+        "Please stop the motor before closing the valve",
+        isWarning: true,
+      );
+      return;
+    }
+
     valveLoading[valveId] = true.obs;
     try {
       final message = await ApiService.controlIndividualValve(
@@ -249,12 +321,49 @@ class MotorController extends GetxController {
   Future<void> fetchLiveData(String token, int farmId) async {
     try {
       isLiveDataLoading.value = true;
+      isRefreshing.value = false;
       final data = await ApiService.getLiveData(token, farmId);
       liveData.value = data;
     } catch (e) {
       print("Live data fetch error: $e");
     } finally {
+      isRefreshing.value = false;
       isLiveDataLoading.value = false;
+    }
+  }
+  // ── Add this method to MotorController ────────────────────────────────────
+  // Place it alongside toggleMotor()
+
+  Future<void> timedRunMotor({
+    required int motorId,
+    required int durationMinutes,
+    required int farmId,
+    required String token,
+  }) async {
+    motorLoading[motorId] = true.obs;
+    try {
+      final message = await ApiService.timedRunMotor(
+        motorId: motorId,
+        durationMinutes: durationMinutes,
+        token: token,
+      );
+      log("Timer run response: $message");
+
+      // Optimistically mark motor as ON
+      final motor =
+          inMotors.firstWhereOrNull((m) => m.id == motorId) ??
+          outMotors.firstWhereOrNull((m) => m.id == motorId);
+      if (motor != null) motor.status.value = "ON";
+
+      showThemedSnackbar("Timer Set", message, isWarning: true);
+    } catch (e) {
+      log("Timer run error: $e");
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '')
+          : 'Something went wrong';
+      showThemedSnackbar("Oops", errorMessage, isError: true);
+    } finally {
+      motorLoading[motorId]?.value = false;
     }
   }
 

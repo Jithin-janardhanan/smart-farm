@@ -1,3 +1,8 @@
+
+
+
+
+
 import 'package:flutter/material.dart';
 import 'package:smartfarm/model/colors_model.dart';
 
@@ -7,6 +12,7 @@ class AppTheme {
     useMaterial3: true,
     brightness: Brightness.light,
     primaryColor: AppColors.lightPrimary,
+    
     scaffoldBackgroundColor: AppColors.lightBackground,
     colorScheme: ColorScheme.light(
       primary: AppColors.lightPrimary,

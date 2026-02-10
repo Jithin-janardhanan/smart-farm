@@ -169,13 +169,13 @@ class _IoTDashboardPageState extends State<IoTDashboardPage>
         child: TabBarView(
           controller: _tabController,
           children: [
-            /// 🌿 Tab 1: Motors & Valves
+            // Tab 1: Motors & Valves
             _buildThemedContainer(
               theme,
               MotorListTab(farmId: widget.farmId, token: widget.token),
             ),
 
-            /// 🕒 Tab 2: Schedule
+            // Tab 2: Schedule
             _buildThemedContainer(
               theme,
               SchedulePage(farmId: widget.farmId, token: widget.token),

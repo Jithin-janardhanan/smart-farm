@@ -268,8 +268,8 @@ class ScheduleFormModal extends StatelessWidget {
               final d = await showDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
-                firstDate: DateTime(2024),
-                lastDate: DateTime(2026),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
               );
               if (d != null) controller.startDate.value = d;
             },
@@ -293,8 +293,8 @@ class ScheduleFormModal extends StatelessWidget {
               final d = await showDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
-                firstDate: DateTime(2024),
-                lastDate: DateTime(2026),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
               );
               if (d != null) controller.endDate.value = d;
             },

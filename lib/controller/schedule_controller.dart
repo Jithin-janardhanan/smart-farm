@@ -15,7 +15,6 @@ class ScheduleController extends GetxController {
   // final RxBool showCreateForm = false.obs;
 
   ScheduleController({required this.farmId, required this.token});
-
   var isLoading = true.obs;
   var inMotors = <Motor>[].obs;
   var outMotors = <Motor>[].obs;

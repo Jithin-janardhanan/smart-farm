@@ -50,6 +50,22 @@ class ApiService {
     }
   }
 
+  static Future<bool> verifyToken(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/verify-token/'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   //send fcm token to backend
 
   static Future<void> sendFcmToken(String fcmToken, String token) async {
@@ -93,7 +109,6 @@ class ApiService {
   }
 
   //reset password
-
   Future<Map<String, dynamic>> resetPassword(
     String apiPath,
     String newPassword,
@@ -135,7 +150,6 @@ class ApiService {
   }
 
   //power supply
-
   static Future<LiveData> getLiveData(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/live-data/');
 
@@ -214,7 +228,6 @@ class ApiService {
   }
 
   // notification log get Api
-
   static Future<List<Map<String, dynamic>>> getNotifications(
     String token,
   ) async {
@@ -236,7 +249,6 @@ class ApiService {
   }
 
   //  To stop all the motors in any farm
-
   static Future<void> emergencyStop(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/shutdown/');
     final headers = {
@@ -252,7 +264,6 @@ class ApiService {
   }
 
   // GET MOTORS BY FARM ID
-
   static Future<Map<String, List<dynamic>>> fetchMotorsAndValves({
     required int farmId,
     required String token,
@@ -288,7 +299,6 @@ class ApiService {
   }
 
   //Motor on and off API
-
   static Future<String> controlMotor({
     required int motorId,
     required String status,
@@ -313,8 +323,56 @@ class ApiService {
     }
   }
 
-  //Get valves for indviduals listing
+  // POST /api/motor/{motorId}/timed-run/
+  // Body: { "status": "ON", "duration_minutes": N }
 
+  static Future<String> timedRunMotor({
+    required int motorId,
+    required int durationMinutes,
+    required String token,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/motor/$motorId/timed-run/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({"status": "ON", "duration_minutes": durationMinutes}),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return body['message'] ?? 'Timer run started successfully';
+    } else {
+      throw Exception(body['message'] ?? 'Failed to start timed run');
+    }
+  }
+
+  // MOTOR NAME EDIT
+
+  static Future<Map<String, dynamic>> patchMotor({
+    required int motorId,
+    required String token,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/motors/$motorId/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to update motor");
+    }
+  }
+
+  //Get valves for indviduals listing
   static Future<Map<String, List<ValveGrouping>>> getGroupedValves(
     int farmId,
     String token,
@@ -347,7 +405,6 @@ class ApiService {
   }
 
   // Get ungrouped Valve List
-
   static Future<List<Valve>> getUngroupedValves(
     String token,
     int farmId,
@@ -371,7 +428,6 @@ class ApiService {
   }
 
   // list out grouped valve
-
   static Future<List<ValveGroup>> getGroupedValveList(
     String token,
     int farmId,
@@ -401,7 +457,6 @@ class ApiService {
   }
 
   //creating group request
-
   static Future<bool> createValveGroup(
     String token,
     ValveGroupRequest request,
@@ -426,7 +481,6 @@ class ApiService {
   }
 
   //Edit valve group
-
   static Future<bool> updateValveGroup({
     required String token,
     required int groupId,
@@ -456,7 +510,6 @@ class ApiService {
   }
 
   //Delete grouped valve
-
   static Future<bool> deleteValveGroup({
     required String token,
     required int groupId,
@@ -477,7 +530,6 @@ class ApiService {
   }
 
   //Grouped Valve Control
-
   static Future<String> controlValveGroup({
     required int groupId,
     required String status, // "ON" or "OFF"
@@ -503,7 +555,6 @@ class ApiService {
   }
 
   // individual Valve control
-
   static Future<String> controlIndividualValve({
     required int valveId,
     required String status,
@@ -528,7 +579,6 @@ class ApiService {
   }
 
   //create new schedule
-
   static Future<http.Response> submitSchedule({
     required String token,
     required int farmId,
@@ -561,7 +611,6 @@ class ApiService {
   }
 
   // fetch scheduled events
-
   static Future<List<Schedule>> fetchSchedules({
     required int farmId,
     required String token,
@@ -583,7 +632,6 @@ class ApiService {
   }
 
   //Edit scheduled Events
-
   static Future<String> updateSchedule({
     required int scheduleId,
     required int farmId,
@@ -623,7 +671,6 @@ class ApiService {
   }
 
   //skip schedules
-
   static Future<void> toggleSkipStatus({
     required String token,
     required int scheduleId,
@@ -642,7 +689,6 @@ class ApiService {
   }
 
   //Delete schedules
-
   static Future<bool> deleteSchedule(String token, int scheduleId) async {
     final url = Uri.parse('$baseUrl/schedules/$scheduleId/');
 
@@ -662,7 +708,6 @@ class ApiService {
   }
 
   // LOGOUT
-
   static Future<String> logoutUser({
     required String token,
     required String fcmToken,
