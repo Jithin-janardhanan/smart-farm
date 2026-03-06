@@ -135,36 +135,63 @@ class LoginPage extends StatelessWidget {
 
   // 🔹 Login Form
   Widget _buildLoginForm(BuildContext context, double width) {
-    final isTablet = width > 600;
+  final isTablet = width > 600;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _buildTextField(
-          context: context,
-          controller: controller.phoneController,
-          label: 'Phone Number',
-          icon: Icons.phone_rounded,
-          keyboardType: TextInputType.phone,
-          validator: controller.validatePhone,
-          isTablet: isTablet,
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      _buildTextField(
+        context: context,
+        controller: controller.phoneController,
+        label: 'Phone Number',
+        icon: Icons.phone_rounded,
+        keyboardType: TextInputType.phone,
+        validator: controller.validatePhone,
+        isTablet: isTablet,
+      ),
+      SizedBox(height: isTablet ? 24 : 20),
+      _buildTextField(
+        context: context,
+        controller: controller.passwordController,
+        label: 'Password',
+        icon: Icons.lock_rounded,
+        isPassword: true,
+        validator: controller.validatePassword,
+        isTablet: isTablet,
+      ),
+      SizedBox(height: 4),
+
+      // 🔹 Remember Me + Forgot Password row
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+            // ✅ FIXED — wrap the entire Row containing the checkbox in Obx
+Obx(() {
+  return Row(
+    children: [
+      Checkbox(
+        value: controller.rememberMe.value,
+        activeColor: Theme.of(context).colorScheme.primary,
+        visualDensity: VisualDensity.compact,
+        onChanged: (val) => controller.rememberMe.value = val ?? false,
+      ),
+      Text(
+        "Remember Me",
+        style: TextStyle(
+          fontSize: isTablet ? 15 : 13,
+          color: isDark ? Colors.white70 : Colors.black54,
         ),
-        SizedBox(height: isTablet ? 24 : 20),
-        _buildTextField(
-          context: context,
-          controller: controller.passwordController,
-          label: 'Password',
-          icon: Icons.lock_rounded,
-          isPassword: true,
-          validator: controller.validatePassword,
-          isTablet: isTablet,
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              Get.to(() => ForgotPasswordView());
-            },
+      ),
+    ],
+  );
+}), 
+            ],
+          ),
+          TextButton(
+            onPressed: () => Get.to(() => ForgotPasswordView()),
             child: Text(
               "Forgot Password?",
               style: TextStyle(
@@ -174,12 +201,14 @@ class LoginPage extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        SizedBox(height: isTablet ? 40 : 30),
-        _buildLoginButton(context, isTablet),
-      ],
-    );
-  }
+        ],
+      ),
+
+      SizedBox(height: isTablet ? 30 : 20),
+      _buildLoginButton(context, isTablet),
+    ],
+  );
+}
 
   // 🔹 TextField Design
   Widget _buildTextField({

@@ -326,28 +326,51 @@ class ApiService {
   // POST /api/motor/{motorId}/timed-run/
   // Body: { "status": "ON", "duration_minutes": N }
 
-  static Future<String> timedRunMotor({
-    required int motorId,
-    required int durationMinutes,
-    required String token,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/motor/$motorId/timed-run/'),
-      headers: {
-        'Authorization': 'Token $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({"status": "ON", "duration_minutes": durationMinutes}),
-    );
+  // ── Add this static method to ApiService ──────────────────────────────────
+  // POST /api/motor/{motorId}/timed-run/
+  // Body: { "status": "ON", "duration_minutes": N }
 
-    final body = jsonDecode(response.body);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return body['message'] ?? 'Timer run started successfully';
-    } else {
-      throw Exception(body['message'] ?? 'Failed to start timed run');
-    }
+
+static Future<String> timedRunMotor({
+  required int motorId,
+  required int durationMinutes,
+  required String token,
+}) async {
+  final requestBody = {
+    "status": "ON",
+    "duration_minutes": durationMinutes,
+  };
+
+  log(
+    '➡️ Request JSON:\n${const JsonEncoder.withIndent('  ').convert(requestBody)}',
+    name: 'timedRunMotor',
+  );
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/motor/$motorId/timed-run/'),
+    headers: {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(requestBody),
+  );
+
+  log(
+    '⬅️ Response (${response.statusCode}) JSON:\n'
+    '${const JsonEncoder.withIndent('  ').convert(jsonDecode(response.body))}',
+    name: 'timedRunMotor',
+  );
+
+  final body = jsonDecode(response.body);
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return body['message'] ?? 'Timer run started successfully';
+  } else {
+    throw Exception(body['message'] ?? 'Failed to start timed run');
   }
+}
+
 
   // MOTOR NAME EDIT
 

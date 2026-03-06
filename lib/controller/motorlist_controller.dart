@@ -312,7 +312,7 @@ class MotorController extends GetxController {
       showThemedSnackbar("Success", message, isSuccess: true);
     } catch (e) {
       showThemedSnackbar("Oops", "Failed to toggle valve", isError: true);
-      print("Something went wrong: $e");
+     
     } finally {
       valveLoading[valveId]?.value = false;
     }
@@ -331,9 +331,6 @@ class MotorController extends GetxController {
       isLiveDataLoading.value = false;
     }
   }
-  // ── Add this method to MotorController ────────────────────────────────────
-  // Place it alongside toggleMotor()
-
   Future<void> timedRunMotor({
     required int motorId,
     required int durationMinutes,
@@ -342,22 +339,31 @@ class MotorController extends GetxController {
   }) async {
     motorLoading[motorId] = true.obs;
     try {
-      final message = await ApiService.timedRunMotor(
+      final result = await ApiService.timedRunMotor(
         motorId: motorId,
         durationMinutes: durationMinutes,
         token: token,
       );
-      log("Timer run response: $message");
 
-      // Optimistically mark motor as ON
+      // ✅ Update local motor state immediately — no extra API call needed
       final motor =
           inMotors.firstWhereOrNull((m) => m.id == motorId) ??
           outMotors.firstWhereOrNull((m) => m.id == motorId);
-      if (motor != null) motor.status.value = "ON";
 
-      showThemedSnackbar("Timer Set", message, isWarning: true);
+      if (motor != null) {
+        final now = DateTime.now();
+        motor.status.value = "ON";
+        motor.timerStartAt.value = now;
+        motor.timerEndAt.value = now.add(Duration(minutes: durationMinutes));
+      }
+
+      showThemedSnackbar(
+        "Timer Set",
+        result,
+        isWarning: true,
+      );
     } catch (e) {
-      log("Timer run error: $e");
+      log("Timed run error: $e");
       final errorMessage = e is Exception
           ? e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '')
           : 'Something went wrong';

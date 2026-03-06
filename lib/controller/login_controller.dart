@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartfarm/controller/farm_controller.dart';
 import 'package:smartfarm/controller/notification_service.dart';
@@ -14,52 +15,78 @@ class LoginController extends GetxController {
 
   var isLoading = false.obs;
   var isPasswordVisible = false.obs;
+  var rememberMe = false.obs; // 🔹 NEW
 
-  // Phone number validation
-  String? validatePhone(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Phone number is required';
+  // 🔹 NEW: Secure storage instance
+  final _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadSavedCredentials(); // 🔹 NEW
+  }
+
+  // 🔹 NEW: Load saved credentials from secure storage
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final saved = await _secureStorage.read(key: 'rememberMe');
+      if (saved == 'true') {
+        final phone = await _secureStorage.read(key: 'saved_phone');
+        final password = await _secureStorage.read(key: 'saved_password');
+        if (phone != null) phoneController.text = phone;
+        if (password != null) passwordController.text = password;
+        rememberMe.value = true;
+      }
+    } catch (e) {
+      // Silently fail — don't block login if secure storage is unavailable
+      debugPrint('Secure storage read error: $e');
     }
+  }
 
-    // Remove any spaces or special characters for validation
+  // 🔹 NEW: Save or clear credentials based on toggle
+  Future<void> _handleRememberMe(String phone, String password) async {
+    try {
+      if (rememberMe.value) {
+        await _secureStorage.write(key: 'saved_phone', value: phone);
+        await _secureStorage.write(key: 'saved_password', value: password);
+        await _secureStorage.write(key: 'rememberMe', value: 'true');
+      } else {
+        await _secureStorage.delete(key: 'saved_phone');
+        await _secureStorage.delete(key: 'saved_password');
+        await _secureStorage.write(key: 'rememberMe', value: 'false');
+      }
+    } catch (e) {
+      debugPrint('Secure storage write error: $e');
+    }
+  }
+
+  String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) return 'Phone number is required';
     String cleanPhone = value.replaceAll(RegExp(r'[^\d]'), '');
-
     if (cleanPhone.length < 10) {
       return 'Phone number must be at least 10 digits';
     }
-
-    if (cleanPhone.length > 15) {
-      return 'Phone number cannot exceed 15 digits';
-    }
-
-    // Check if it contains only digits
+    if (cleanPhone.length > 15) return 'Phone number cannot exceed 15 digits';
     if (!RegExp(r'^\d+$').hasMatch(cleanPhone)) {
       return 'Phone number should contain only digits';
     }
-
     return null;
   }
 
-  // Password validation
   String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
-
+    if (value == null || value.isEmpty) return 'Password is required';
+    if (value.length < 6) return 'Password must be at least 6 characters long';
     return null;
   }
 
-  // Toggle password visibility
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
   void login() async {
-    // Validate form before proceeding
     if (!formKey.currentState!.validate()) {
       Get.snackbar(
         "Invalid Input",
@@ -78,39 +105,33 @@ class LoginController extends GetxController {
       final phone = phoneController.text.trim();
       final password = passwordController.text.trim();
 
-      // Call API Service
       final response = await ApiService.login(phone, password);
-
       final user = User.fromJson(response);
 
-      // Save login details
+      await _handleRememberMe(
+        phone,
+        password,
+      ); // 🔹 NEW — only saves on successful login
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', user.token);
       await prefs.setInt('user_id', user.userId);
       await prefs.setInt('farmer_id', user.farmerId);
       await prefs.setBool('isLoggedIn', true);
 
-      // Initialize controllers
       Get.put(FarmController());
-
-      // Navigate to home page
       Get.off(() => HomePage(token: user.token));
 
-    
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await NotificationService.requestPermission();
         await NotificationService.getFcmToken();
         NotificationService.initializeListeners();
-
-        // After setting up notifications, navigate
       });
     } catch (e) {
       String errorMessage = "Something went wrong. Please try again.";
-
       if (e.toString().contains("Invalid phone number or password")) {
         errorMessage = "Invalid phone number or password.";
       }
-
       Get.snackbar(
         "Login Failed",
         errorMessage,
@@ -126,7 +147,6 @@ class LoginController extends GetxController {
 
   @override
   void onClose() {
-    // Dispose only if widgets are not rebuilding
     if (Get.isRegistered<LoginController>()) {
       phoneController.dispose();
       passwordController.dispose();

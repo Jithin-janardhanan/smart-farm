@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:smartfarm/controller/motorlist_controller.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
+import 'package:smartfarm/utils/timer_badge.dart';
 import 'package:smartfarm/view/confirmation_popup.dart';
 
 class MotorListTab extends StatelessWidget {
@@ -744,7 +745,7 @@ class MotorListTab extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final status = motor.status.value;
     final isOn = status == "ON";
-    final displayName = motor.display_name.value.trim();
+    final displayName = motor.displayname.value.trim();
     final motorName = motor.name;
     final loraId = motor.loraId.value;
 
@@ -810,6 +811,7 @@ class MotorListTab extends StatelessWidget {
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
@@ -824,55 +826,62 @@ class MotorListTab extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               );
             }
-            return Switch(
-              value: isOn,
-
-              // ── Replace the Switch onChanged block in _buildMotorCardContent ──────────
-              // (inside the Obx that wraps the Switch, around line 260 of motorlist_tab.dart)
-              onChanged: (_) {
-                final newStatus = isOn ? "OFF" : "ON";
-
-                if (newStatus == "ON") {
-                  showMotorConfirmationDialog(
-                    motorName: motor.name,
-                    onConfirm: () {
-                      // No timer — normal turn-on
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                   MotorTimerBadge(motor: motor),
+    const SizedBox(width: 8),
+                Switch(
+                  value: isOn,
+                
+                  // ── Replace the Switch onChanged block in _buildMotorCardContent ──────────
+                  // (inside the Obx that wraps the Switch, around line 260 of motorlist_tab.dart)
+                  onChanged: (_) {
+                    final newStatus = isOn ? "OFF" : "ON";
+                
+                    if (newStatus == "ON") {
+                      showMotorConfirmationDialog(
+                        motorName: motor.name,
+                        onConfirm: () {
+                          // No timer — normal turn-on
+                          controller.toggleMotor(
+                            motorId: motor.id,
+                            status: "ON",
+                            farmId: farmId,
+                            token: token,
+                          );
+                        },
+                        onTimedConfirm: (int durationMinutes) {
+                          // Timer set — use timed-run API only
+                          controller.timedRunMotor(
+                            motorId: motor.id,
+                            durationMinutes: durationMinutes,
+                            farmId: farmId,
+                            token: token,
+                          );
+                        },
+                      );
+                    } else {
                       controller.toggleMotor(
                         motorId: motor.id,
-                        status: "ON",
+                        status: "OFF",
                         farmId: farmId,
                         token: token,
                       );
-                    },
-                    onTimedConfirm: (int durationMinutes) {
-                      // Timer set — use timed-run API only
-                      controller.timedRunMotor(
-                        motorId: motor.id,
-                        durationMinutes: durationMinutes,
-                        farmId: farmId,
-                        token: token,
-                      );
-                    },
-                  );
-                } else {
-                  controller.toggleMotor(
-                    motorId: motor.id,
-                    status: "OFF",
-                    farmId: farmId,
-                    token: token,
-                  );
-                }
-              },
-              // onChanged: (_) {
-              //   final newStatus = isOn ? "OFF" : "ON";
-              //   controller.toggleMotor(
-              //     motorId: motor.id,
-              //     status: newStatus,
-              //     farmId: farmId,
-              //     token: token,
-              //   );
-              // },
-              activeThumbColor: colorScheme.primary,
+                    }
+                  },
+                  // onChanged: (_) {
+                  //   final newStatus = isOn ? "OFF" : "ON";
+                  //   controller.toggleMotor(
+                  //     motorId: motor.id,
+                  //     status: newStatus,
+                  //     farmId: farmId,
+                  //     token: token,
+                  //   );
+                  // },
+                  activeThumbColor: colorScheme.primary,
+                ),
+              ],
             );
           }),
         ],

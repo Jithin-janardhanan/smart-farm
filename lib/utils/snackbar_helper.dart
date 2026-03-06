@@ -16,9 +16,7 @@ void showThemedSnackbar(
   final background = isError
       ? theme.errorContainer
       : isWarning
-      ? Colors
-            .amber
-            .shade600 // ✅ Yellow
+      ? Colors.amber.shade600
       : isSuccess
       ? theme.primaryContainer
       : theme.surface;

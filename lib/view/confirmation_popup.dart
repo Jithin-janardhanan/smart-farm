@@ -15,9 +15,7 @@ Future<void> showMotorConfirmationDialog({
 
   return Get.dialog(
     Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 32),
       child: Obx(() {
         return Padding(
@@ -40,10 +38,7 @@ Future<void> showMotorConfirmationDialog({
               const Center(
                 child: Text(
                   "Confirm Motor Start",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 8),
@@ -95,8 +90,9 @@ Future<void> showMotorConfirmationDialog({
                         timerError.value = '';
                       }
                     },
-                    activeThumbColor:
-                        Theme.of(Get.context!).colorScheme.primary,
+                    activeThumbColor: Theme.of(
+                      Get.context!,
+                    ).colorScheme.primary,
                   ),
                 ],
               ),
@@ -170,16 +166,21 @@ Future<void> showMotorConfirmationDialog({
                                 labelText: isHour.value
                                     ? "Duration (hours)"
                                     : "Duration (minutes)",
-                                hintText:
-                                    isHour.value ? "e.g. 2" : "e.g. 30",
+                                hintText: isHour.value ? "e.g. 2" : "e.g. 30",
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.withOpacity(
+                                    0.4,
+                                  ), // less intensity
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                ),
                                 prefixIcon: Icon(
                                   Icons.timer,
-                                  color: Theme.of(Get.context!)
-                                      .colorScheme
-                                      .primary,
+                                  color: Theme.of(
+                                    Get.context!,
+                                  ).colorScheme.primary,
                                 ),
-                                suffixText:
-                                    isHour.value ? "hr" : "min",
+                                suffixText: isHour.value ? "hr" : "min",
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -203,25 +204,29 @@ Future<void> showMotorConfirmationDialog({
                               padding: const EdgeInsets.only(top: 8),
                               child: Wrap(
                                 spacing: 6,
-                                children: (isHour.value
-                                        ? [1, 2, 4, 8]
-                                        : [15, 30, 45, 60])
-                                    .map(
-                                      (v) => ActionChip(
-                                        label: Text(
-                                          "$v ${isHour.value ? 'hr' : 'min'}",
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () {
-                                          timerValueController.text =
-                                              v.toString();
-                                          timerError.value = '';
-                                        },
-                                      ),
-                                    )
-                                    .toList(),
+                                children:
+                                    (isHour.value
+                                            ? [1, 2, 4, 8]
+                                            : [15, 30, 45, 60])
+                                        .map(
+                                          (v) => ActionChip(
+                                            label: Text(
+                                              "$v ${isHour.value ? 'hr' : 'min'}",
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            onPressed: () {
+                                              timerValueController.text = v
+                                                  .toString();
+                                              timerError.value = '';
+                                            },
+                                          ),
+                                        )
+                                        .toList(),
                               ),
                             ),
                           ],
@@ -266,11 +271,11 @@ Future<void> showMotorConfirmationDialog({
                       onPressed: () {
                         if (useTimer.value) {
                           // ── Validate ────────────────────────────
-                          final raw =
-                              int.tryParse(timerValueController.text.trim());
+                          final raw = int.tryParse(
+                            timerValueController.text.trim(),
+                          );
                           if (raw == null || raw <= 0) {
-                            timerError.value =
-                                'Please enter a valid duration';
+                            timerError.value = 'Please enter a valid duration';
                             return;
                           }
 
@@ -282,8 +287,7 @@ Future<void> showMotorConfirmationDialog({
                             return;
                           }
 
-                          final minutes =
-                              isHour.value ? raw * 60 : raw;
+                          final minutes = isHour.value ? raw * 60 : raw;
 
                           Get.back();
                           onTimedConfirm(minutes);
@@ -346,8 +350,7 @@ class _UnitToggleButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color:
-                    selected ? colorScheme.onPrimary : colorScheme.onSurface,
+                color: selected ? colorScheme.onPrimary : colorScheme.onSurface,
               ),
             ),
           ],

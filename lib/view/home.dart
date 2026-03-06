@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +7,7 @@ import 'package:smartfarm/view/curved_appbar.dart';
 import 'package:smartfarm/view/notificationlog.dart';
 import 'package:smartfarm/view/profile.dart';
 import 'package:smartfarm/view/tab_controller.dart';
+import 'package:smartfarm/weather/weather_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatelessWidget {
@@ -34,14 +34,20 @@ class HomePage extends StatelessWidget {
     }
   }
 
-  Future<void> navigateToMotors(int farmId) async {
+  Future<void> navigateToMotors(BuildContext context, int farmId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
     if (token != null) {
       Get.to(() => IoTDashboardPage(farmId: farmId, token: token));
     } else {
-      debugPrint("Token not found");
+      // FIX Bug 6: Show user-visible feedback instead of silent debugPrint
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Session expired. Please log in again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -65,7 +71,7 @@ class HomePage extends StatelessWidget {
                   image: AssetImage("assets/images/Agriculture.jpeg"),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withValues(alpha: 0.3),
                     BlendMode.darken,
                   ),
                 ),
@@ -123,7 +129,6 @@ class HomePage extends StatelessWidget {
       ),
 
       body: Obx(() {
-        // show loader while farms are loading
         if (farmController.isLoading.value) {
           return Center(
             child: CircularProgressIndicator(
@@ -138,83 +143,87 @@ class HomePage extends StatelessWidget {
             await farmController.fetchAllMotors();
           },
           color: colorScheme.primary,
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
 
-              // Dashboard summary row
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSummaryCard(
-                      title: "Farms",
-                      value: farmController.totalFarms.toString(),
-                      icon: Icons.agriculture,
-                      color: colorScheme.primary,
-                    ),
-                    _buildSummaryCard(
-                      title: "Motors",
-                      value: farmController.totalMotors.toString(),
-                      icon: Icons.settings_input_component,
-                      color: Colors.blue,
-                    ),
-                    _buildSummaryCard(
-                      title: "Running",
-                      value: farmController.runningMotors.toString(),
-                      icon: Icons.power,
-                      color: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // if no farms, show empty prompt
-              if (farmController.farms.isEmpty)
-                Expanded(
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.agriculture_outlined,
-                                size: 80,
-                                color: colorScheme.secondary.withOpacity(0.4),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No farms found',
-                                style: textTheme.bodyLarge?.copyWith(
-                                  fontSize: 18,
-                                  color: colorScheme.onSurface.withOpacity(0.7),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Pull down to refresh',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurface.withOpacity(0.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      _buildSummaryCard(
+                        title: "Farms",
+                        value: farmController.totalFarms.toString(),
+                        icon: Icons.agriculture,
+                        color: colorScheme.primary,
+                        colorScheme: colorScheme,
+                      ),
+                      _buildSummaryCard(
+                        title: "Motors",
+                        value: farmController.totalMotors.toString(),
+                        icon: Icons.settings_input_component,
+                        color: Colors.blue,
+                        colorScheme: colorScheme,
+                      ),
+                      _buildSummaryCard(
+                        title: "Running",
+                        value: farmController.runningMotors.toString(),
+                        icon: Icons.power,
+                        color: Colors.green,
+                        colorScheme: colorScheme,
                       ),
                     ],
                   ),
-                )
-              else
-                // Grid of farms
-                Expanded(
-                  child: GridView.builder(
+                ),
+                const SizedBox(height: 10),
+                WeatherForecastWidget(token: token),
+                const SizedBox(height: 10),
+
+                if (farmController.farms.isEmpty)
+                  // FIX Bug 5: ListView inside Column with unbounded height
+                  // caused "Vertical viewport was given unbounded height" error.
+                  // Replaced with a plain Column-compatible layout.
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.agriculture_outlined,
+                            size: 80,
+                            color: colorScheme.secondary.withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No farms found',
+                            style: textTheme.bodyLarge?.copyWith(
+                              fontSize: 18,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pull down to refresh',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -227,7 +236,8 @@ class HomePage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final farm = farmController.farms[index];
                       return GestureDetector(
-                        onTap: () => navigateToMotors(farm.id),
+                        // FIX Bug 6: pass context so SnackBar can be shown
+                        onTap: () => navigateToMotors(context, farm.id),
                         child: Container(
                           decoration: BoxDecoration(
                             color: colorScheme.surface,
@@ -239,7 +249,6 @@ class HomePage extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Header
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -248,8 +257,9 @@ class HomePage extends StatelessWidget {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: colorScheme.secondary
-                                            .withOpacity(0.15),
+                                        color: colorScheme.secondary.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Icon(
@@ -262,8 +272,8 @@ class HomePage extends StatelessWidget {
                                       width: 32,
                                       height: 32,
                                       decoration: BoxDecoration(
-                                        color: AppColors.errorRed.withOpacity(
-                                          0.1,
+                                        color: AppColors.errorRed.withValues(
+                                          alpha: 0.1,
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
@@ -312,7 +322,7 @@ class HomePage extends StatelessWidget {
                                         farm.location,
                                         style: textTheme.bodyMedium?.copyWith(
                                           color: colorScheme.onSurface
-                                              .withOpacity(0.7),
+                                              .withValues(alpha: 0.7),
                                           fontSize: 12,
                                         ),
                                         maxLines: 1,
@@ -333,8 +343,9 @@ class HomePage extends StatelessWidget {
                                     Text(
                                       '${farm.farmArea} acres',
                                       style: textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.onSurface
-                                            .withOpacity(0.7),
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.7,
+                                        ),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -345,7 +356,9 @@ class HomePage extends StatelessWidget {
                                   width: double.infinity,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(0.1),
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Center(
@@ -366,25 +379,28 @@ class HomePage extends StatelessWidget {
                       );
                     },
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       }),
     );
   }
 
+  // FIX Bug 7: Added `colorScheme` param so title text uses theme color
+  // instead of hardcoded Colors.black87, which breaks in dark mode.
   Widget _buildSummaryCard({
     required String title,
     required String value,
     required IconData icon,
     required Color color,
+    required ColorScheme colorScheme,
   }) {
     return Container(
       width: 103,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -403,7 +419,8 @@ class HomePage extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.black87,
+              // Was Colors.black87 — invisible in dark mode
+              color: colorScheme.onSurface.withValues(alpha: 0.75),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -458,7 +475,9 @@ class HomePage extends StatelessWidget {
           ),
           content: Text(
             'Are you sure you want to trigger emergency stop for $farmName?',
-            style: TextStyle(color: colorScheme.onSurface.withOpacity(0.8)),
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.8),
+            ),
           ),
           actions: [
             TextButton(
