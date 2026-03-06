@@ -1,8 +1,8 @@
 name: smartfarm
 description: "A new Flutter project."
-publish_to: 'none' 
+publish_to: "none"
 
-version: 1.0.0+3
+version: 1.0.0+16
 
 environment:
   sdk: ^3.8.0
@@ -12,13 +12,18 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   get: ^4.7.2
-  http: ^1.4.0
+  http: ^1.4.0   
   shared_preferences: ^2.5.3
   flutter_dotenv: ^6.0.0
   firebase_core: ^4.2.0
   firebase_messaging: ^16.0.3
   url_launcher: ^6.3.2
-  
+  fl_chart: ^1.1.1
+  app_links: ^6.4.1
+  intl: ^0.20.2
+  flutter_local_notifications: ^17.0.0
+  dio: ^5.9.1
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:
@@ -29,14 +34,19 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/smartfarm_icon.png"
+  image_path: "assets/images/Logo 1-Photoroom.png"
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/images/smartfarm_icon.png"
+  adaptive_icon_foreground: "assets/images/Logo 1-Photoroom.png"
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/premium.jpeg
     - assets/images/smartfarm_icon.png
+    - assets/images/farmlogo.png
+    - assets/images/Agriculture.jpeg
+    - assets/images/Logo 1.jpg
+    - assets/images/Logo 1-Photoroom.png
+    - assets/images/Logo_2-Photoroom.png
     - .env
+    - assets/images/electric-motor.png

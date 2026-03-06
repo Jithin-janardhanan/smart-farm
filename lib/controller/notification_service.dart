@@ -1,30 +1,33 @@
-// import 'dart:developer';
-// import 'package:firebase_messaging/firebase_messaging.dart';
-
-// class NotificationService {
-//   /// Get FCM token from Firebase
-//   static Future<String?> getFcmToken() async {
-//     try {
-//       String? fcmToken = await FirebaseMessaging.instance.getToken();
-//       if (fcmToken == null) {
-//         log("❌ Failed to get FCM token");
-//       } else {
-//         log("📱 Got FCM Token: $fcmToken");
-//       }
-//       return fcmToken;
-//     } catch (e) {
-//       log("🚨 Error fetching FCM token: $e");
-//       return null;
-//     }
-//   }
-// }
 import 'dart:developer';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
-  /// ✅ Request notification permission (for Android 13+ and iOS)
+  /// ✅ INIT
+  static Future<void> init() async {
+    await requestPermission();
+    await _initLocalNotifications();
+    initializeListeners();
+    await getFcmToken();
+  }
+
+  /// ✅ Local notification init
+  static Future<void> _initLocalNotifications() async {
+    const AndroidInitializationSettings androidInit =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidInit,
+    );
+
+    await _localNotifications.initialize(initSettings);
+  }
+
+  /// ✅ Permission
   static Future<void> requestPermission() async {
     NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
@@ -32,51 +35,58 @@ class NotificationService {
       sound: true,
     );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      log("✅ User granted permission for notifications");
-    } else if (settings.authorizationStatus ==
-        AuthorizationStatus.provisional) {
-      log("⚠️ User granted provisional permission");
-    } else {
-      log("❌ User declined or has not accepted notification permission");
-    }
+    log("🔔 Permission: ${settings.authorizationStatus}");
   }
 
-  /// ✅ Get FCM token from Firebase
+  /// ✅ Token
   static Future<String?> getFcmToken() async {
-    try {
-      String? fcmToken = await _messaging.getToken();
-      if (fcmToken == null) {
-        log("❌ Failed to get FCM token");
-      } else {
-        log("📱 Got FCM Token: $fcmToken");
-      }
-
-      // 🔁 Optionally listen for token refresh
-      _messaging.onTokenRefresh.listen((newToken) {
-        log("🔄 FCM Token refreshed: $newToken");
-        // 👉 Send the new token to your backend if needed
-      });
-
-      return fcmToken;
-    } catch (e) {
-      log("🚨 Error fetching FCM token: $e");
-      return null;
-    }
+    String? token = await _messaging.getToken();
+    log("📱 FCM TOKEN: $token");
+    return token;
   }
 
-  /// ✅ Handle background and foreground messages
+  /// ✅ LISTENERS
   static void initializeListeners() {
-    // Foreground messages
+    /// 🔥 FOREGROUND
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      log("📩 Foreground message: ${message.notification?.title}");
-      // Handle UI alert or local notification if you want
+      log("📩 Foreground message received");
+
+      if (message.notification != null) {
+        showLocalNotification(
+          title: message.notification!.title ?? '',
+          body: message.notification!.body ?? '',
+        );
+      }
     });
 
-    // When app is opened via a notification
+    /// 🔥 BACKGROUND TAP
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      log("🚀 App opened by notification: ${message.notification?.title}");
-      // Navigate to a screen if needed
+      log("🚀 Opened from notification");
     });
+  }
+
+  /// ✅ SHOW LOCAL NOTIFICATION
+  static Future<void> showLocalNotification({
+    required String title,
+    required String body,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'smartfarm_channel',
+          'SmartFarm Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      details,
+    );
   }
 }

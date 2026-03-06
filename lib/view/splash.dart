@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smartfarm/controller/notification_service.dart';
+import 'package:smartfarm/service/api_service.dart';
 import 'package:smartfarm/view/home.dart';
 import 'package:smartfarm/view/login_view.dart';
 
@@ -12,76 +12,44 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-// class _SplashScreenState extends State<SplashScreen> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     _navigate();
-//   }
-
-
-//   Future<void> _navigate() async {
-//   print("Splash: start navigation");
-//   final prefs = await SharedPreferences.getInstance();
-//   final token = prefs.getString('token');
-//   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-//   print("Splash: token=$token, isLoggedIn=$isLoggedIn");
-
-//   await Future.delayed(const Duration(seconds: 1));
-
-//   if (isLoggedIn && token != null && token.isNotEmpty) {
-//     print("Splash: going to HomePage");
-//     Get.off(() => HomePage(token: token));
-//   } else {
-//     print("Splash: going to LoginPage");
-//     Get.off(() => LoginPage());
-//   }
-// }
-
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Scaffold(body: Center(child: CircularProgressIndicator()));
-//   }
-// }
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Request notification permission after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await NotificationService.requestPermission();
-      await NotificationService.getFcmToken();
-      NotificationService.initializeListeners();
-
-      // After setting up notifications, navigate
-      _navigate();
-    });
+    _navigate();
   }
+
+ 
+
+  Future<void> _logoutAndRedirect(SharedPreferences prefs) async {
+  await prefs.clear();
+  Get.offAll(() => LoginPage());
+}
+
 
   Future<void> _navigate() async {
-    print("Splash: start navigation");
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-    print("Splash: token=$token, isLoggedIn=$isLoggedIn");
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    await Future.delayed(const Duration(seconds: 1));
+  await Future.delayed(const Duration(seconds: 1));
 
-    if (isLoggedIn && token != null && token.isNotEmpty) {
-      print("Splash: going to HomePage");
+  if (isLoggedIn && token != null && token.isNotEmpty) {
+    final isValid = await ApiService.verifyToken(token);
+
+    if (isValid) {
       Get.off(() => HomePage(token: token));
     } else {
-      print("Splash: going to LoginPage");
-      Get.off(() => LoginPage());
+      await _logoutAndRedirect(prefs);
     }
+  } else {
+    Get.off(() => LoginPage());
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

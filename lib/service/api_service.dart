@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:smartfarm/controller/notificition.dart';
+import 'package:smartfarm/controller/fcm.dart';
 import 'package:smartfarm/model/farms_model.dart';
 import 'package:smartfarm/model/motor_model.dart';
 import 'package:smartfarm/model/power_supply.dart';
 import 'package:smartfarm/model/profile_model.dart';
 import 'package:smartfarm/model/schedule_model.dart';
+import 'package:smartfarm/model/telemetry_data.model.dart';
 import 'package:smartfarm/model/valves_model.dart';
 import 'package:smartfarm/model/grouped_valve_listing_model.dart';
 import 'package:smartfarm/model/create_group.dart';
@@ -21,39 +22,25 @@ class ApiService {
     }
     return url;
   }
+
   //login
 
   static Future<Map<String, dynamic>> login(
     String phone,
     String password,
   ) async {
-    log("🚀 [login()] function called with:");
-    log("📞 Phone: $phone");
-    log("🔑 Password: $password");
-
-    log("🌍 Using baseUrl: $baseUrl");
-
     var url = Uri.parse('$baseUrl/farmer-login/');
     var headers = {'Content-Type': 'application/json'};
     var body = json.encode({"phone_number": phone, "password": password});
-
-    log("🌐 Full URL: $url");
-    log("📤 Sending body: $body");
-
     try {
       final response = await http.post(url, headers: headers, body: body);
-
-      log("📡 Login response [${response.statusCode}]: ${response.body}");
-
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         String token = data['token'];
-        log("✅ Login successful! Token received: $token");
-
+        log(token);
         await FCMService.sendTokenToBackend(token);
         return data;
       } else {
-        log("❌ Login failed with status ${response.statusCode}");
         throw Exception('Login failed: ${response.body}');
       }
     } catch (e, s) {
@@ -62,6 +49,24 @@ class ApiService {
       rethrow;
     }
   }
+
+  static Future<bool> verifyToken(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/verify-token/'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  //send fcm token to backend
 
   static Future<void> sendFcmToken(String fcmToken, String token) async {
     try {
@@ -73,9 +78,57 @@ class ApiService {
       var body = json.encode({'fcm_token': fcmToken});
       var response = await http.post(url, headers: headers, body: body);
 
-      log("📡 FCM Token Response [${response.statusCode}]: ${response.body}");
+      log(
+        "📡 FCM Token save avunnund [${response.statusCode}]: ${response.body}",
+      );
     } catch (e) {
       log("🚨 Error sending FCM token: $e");
+    }
+  }
+
+  //forget password mail request
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request('POST', Uri.parse('$baseUrl/forgot-password/'));
+    request.body = json.encode({"email": email});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      return {"success": true, "data": json.decode(responseBody)};
+    } else {
+      final error = await response.stream.bytesToString();
+      return {
+        "success": false,
+        "message": error.isNotEmpty ? error : response.reasonPhrase,
+      };
+    }
+  }
+
+  //reset password
+  Future<Map<String, dynamic>> resetPassword(
+    String apiPath,
+    String newPassword,
+  ) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request('POST', Uri.parse('$baseUrl/$apiPath'));
+    request.body = json.encode({"new_password": newPassword});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      return {"success": true, "data": responseBody};
+    } else {
+      final error = await response.stream.bytesToString();
+      return {
+        "success": false,
+        "message": error.isNotEmpty ? error : response.reasonPhrase,
+      };
     }
   }
 
@@ -97,7 +150,6 @@ class ApiService {
   }
 
   //power supply
-
   static Future<LiveData> getLiveData(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/live-data/');
 
@@ -113,6 +165,28 @@ class ApiService {
       return LiveData.fromJson(data);
     } else {
       throw Exception("Failed to fetch live data");
+    }
+  }
+
+  //graph
+  static Future<List<TelemetryData>> getTelemetryData(
+    String token,
+    int farmId,
+  ) async {
+    final url = Uri.parse('$baseUrl/farm/$farmId/telemetry/graph/');
+
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((item) => TelemetryData.fromJson(item)).toList();
+    } else {
+      throw Exception("Failed to fetch telemetry data");
     }
   }
 
@@ -153,8 +227,28 @@ class ApiService {
     }
   }
 
-  //  To stop all the motors in any farm
+  // notification log get Api
+  static Future<List<Map<String, dynamic>>> getNotifications(
+    String token,
+  ) async {
+    final url = Uri.parse('$baseUrl/send-fcm-log/');
+    final headers = {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    };
 
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(json.decode(response.body));
+    } else {
+      throw Exception(
+        'Failed to fetch notifications: ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  //  To stop all the motors in any farm
   static Future<void> emergencyStop(String token, int farmId) async {
     final url = Uri.parse('$baseUrl/farms/$farmId/shutdown/');
     final headers = {
@@ -170,7 +264,6 @@ class ApiService {
   }
 
   // GET MOTORS BY FARM ID
-
   static Future<Map<String, List<dynamic>>> fetchMotorsAndValves({
     required int farmId,
     required String token,
@@ -185,7 +278,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-
+      log("Motors and Valves Data: $data");
       return {
         'inMotors': List<Motor>.from(
           data['motors']['in'].map((m) => Motor.fromJson(m)),
@@ -206,10 +299,9 @@ class ApiService {
   }
 
   //Motor on and off API
-
   static Future<String> controlMotor({
     required int motorId,
-    required String status, // "ON" or "OFF"
+    required String status,
     required String token,
   }) async {
     final url = Uri.parse('$baseUrl/motors/$motorId/manual-control/');
@@ -231,8 +323,79 @@ class ApiService {
     }
   }
 
-  //Get valves for indviduals listing
+  // POST /api/motor/{motorId}/timed-run/
+  // Body: { "status": "ON", "duration_minutes": N }
 
+  // ── Add this static method to ApiService ──────────────────────────────────
+  // POST /api/motor/{motorId}/timed-run/
+  // Body: { "status": "ON", "duration_minutes": N }
+
+
+
+static Future<String> timedRunMotor({
+  required int motorId,
+  required int durationMinutes,
+  required String token,
+}) async {
+  final requestBody = {
+    "status": "ON",
+    "duration_minutes": durationMinutes,
+  };
+
+  log(
+    '➡️ Request JSON:\n${const JsonEncoder.withIndent('  ').convert(requestBody)}',
+    name: 'timedRunMotor',
+  );
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/motor/$motorId/timed-run/'),
+    headers: {
+      'Authorization': 'Token $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(requestBody),
+  );
+
+  log(
+    '⬅️ Response (${response.statusCode}) JSON:\n'
+    '${const JsonEncoder.withIndent('  ').convert(jsonDecode(response.body))}',
+    name: 'timedRunMotor',
+  );
+
+  final body = jsonDecode(response.body);
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return body['message'] ?? 'Timer run started successfully';
+  } else {
+    throw Exception(body['message'] ?? 'Failed to start timed run');
+  }
+}
+
+
+  // MOTOR NAME EDIT
+
+  static Future<Map<String, dynamic>> patchMotor({
+    required int motorId,
+    required String token,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/motors/$motorId/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to update motor");
+    }
+  }
+
+  //Get valves for indviduals listing
   static Future<Map<String, List<ValveGrouping>>> getGroupedValves(
     int farmId,
     String token,
@@ -265,7 +428,6 @@ class ApiService {
   }
 
   // Get ungrouped Valve List
-
   static Future<List<Valve>> getUngroupedValves(
     String token,
     int farmId,
@@ -281,6 +443,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      log("Ungrouped Valves Data: $data");
       return (data as List).map((v) => Valve.fromJson(v)).toList();
     } else {
       throw Exception("Failed to fetch ungrouped valves");
@@ -288,7 +451,6 @@ class ApiService {
   }
 
   // list out grouped valve
-
   static Future<List<ValveGroup>> getGroupedValveList(
     String token,
     int farmId,
@@ -300,11 +462,17 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
+    log("Request URL: $url");
+    log("Request Headers: $headers");
+
     final response = await http.get(url, headers: headers);
+
+    // Log status code and response
+    log("Status Code: ${response.statusCode}");
+    log("Response Body: ${response.body}");
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-
       return jsonList.map((e) => ValveGroup.fromJson(e)).toList();
     } else {
       throw Exception("Failed to fetch grouped valves: ${response.body}");
@@ -312,7 +480,6 @@ class ApiService {
   }
 
   //creating group request
-
   static Future<bool> createValveGroup(
     String token,
     ValveGroupRequest request,
@@ -337,7 +504,6 @@ class ApiService {
   }
 
   //Edit valve group
-
   static Future<bool> updateValveGroup({
     required String token,
     required int groupId,
@@ -367,7 +533,6 @@ class ApiService {
   }
 
   //Delete grouped valve
-
   static Future<bool> deleteValveGroup({
     required String token,
     required int groupId,
@@ -388,12 +553,12 @@ class ApiService {
   }
 
   //Grouped Valve Control
-
   static Future<String> controlValveGroup({
     required int groupId,
     required String status, // "ON" or "OFF"
     required String token,
   }) async {
+    log("Toggling Valve Group ID: $groupId to Status: $status");
     final url = Uri.parse('$baseUrl/valve-groups/$groupId/manual-control/');
     final headers = {
       'Authorization': 'Token $token',
@@ -401,18 +566,18 @@ class ApiService {
     };
 
     final body = json.encode({"status": status});
-
     final response = await http.post(url, headers: headers, body: body);
-
+    log(
+      "Valve Group Control Response [${response.statusCode}]: ${response.body}",
+    );
     if (response.statusCode == 200) {
       return jsonDecode(response.body)['message'] ?? 'Success';
     } else {
-      throw Exception('Failed to control valve group');
+      throw Exception('Failed to toggle valve group: ${response.reasonPhrase}');
     }
   }
 
   // individual Valve control
-
   static Future<String> controlIndividualValve({
     required int valveId,
     required String status,
@@ -429,6 +594,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      // log("Individual Valve Control Response: $data");
       return data['message'] ?? 'Valve $status successful';
     } else {
       throw Exception('Failed to toggle valve: ${response.reasonPhrase}');
@@ -436,7 +602,6 @@ class ApiService {
   }
 
   //create new schedule
-
   static Future<http.Response> submitSchedule({
     required String token,
     required int farmId,
@@ -469,7 +634,6 @@ class ApiService {
   }
 
   // fetch scheduled events
-
   static Future<List<Schedule>> fetchSchedules({
     required int farmId,
     required String token,
@@ -480,6 +644,7 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
+    log("$url");
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
@@ -490,7 +655,6 @@ class ApiService {
   }
 
   //Edit scheduled Events
-
   static Future<String> updateSchedule({
     required int scheduleId,
     required int farmId,
@@ -530,7 +694,6 @@ class ApiService {
   }
 
   //skip schedules
-
   static Future<void> toggleSkipStatus({
     required String token,
     required int scheduleId,
@@ -549,7 +712,6 @@ class ApiService {
   }
 
   //Delete schedules
-
   static Future<bool> deleteSchedule(String token, int scheduleId) async {
     final url = Uri.parse('$baseUrl/schedules/$scheduleId/');
 
@@ -569,17 +731,20 @@ class ApiService {
   }
 
   // LOGOUT
-
-  static Future<String> logoutUser(String token) async {
-    var url = Uri.parse('$baseUrl/logout/');
+  static Future<String> logoutUser({
+    required String token,
+    required String fcmToken,
+  }) async {
+    final url = Uri.parse('$baseUrl/logout/');
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         url,
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({'fcm_token': fcmToken}),
       );
 
       if (response.statusCode == 200) {
@@ -592,8 +757,7 @@ class ApiService {
         );
       }
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Network error during logout: ${e.toString()}');
+      throw Exception('Network error during logout: $e');
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smartfarm/controller/login_controller.dart';
 import 'package:smartfarm/model/colors_model.dart';
+import 'package:smartfarm/view/forgot_password_view.dart';
 
 class LoginPage extends StatelessWidget {
   final LoginController controller = Get.put(LoginController());
@@ -10,190 +11,208 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final screenWidth = mediaQuery.size.width;
-    final screenHeight = mediaQuery.size.height;
-    final isTablet = screenWidth > 600;
-    final isLandscape = mediaQuery.orientation == Orientation.landscape;
-  
+    final media = MediaQuery.of(context);
+    final isLandscape = media.orientation == Orientation.landscape;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: AppColors.background, // Light background
+      backgroundColor: colorScheme.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth > 600;
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
 
-      body: SingleChildScrollView(
-        child: Container(
-          height: isLandscape
-              ? screenHeight - kToolbarHeight - mediaQuery.padding.top
-              : null,
-          decoration: BoxDecoration(color: AppColors.background),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 40 : 20,
-              vertical: isTablet ? 30 : 20,
-            ),
-            child: Form(
-              key: controller.formKey,
-              child: Obx(
-                () => isLandscape && isTablet
-                    ? _buildTabletLandscapeLayout(context, isTablet)
-                    : _buildMobileLayout(context, isTablet),
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: height),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? width * 0.1 : 24,
+                    vertical: (isTablet ? 40 : 20) + 60,
+                  ),
+                  child: Form(
+                    key: controller.formKey,
+                    child: Obx(
+                      () => isTablet && isLandscape
+                          ? _buildTabletLandscapeLayout(context, width)
+                          : _buildMobileLayout(context, width),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTabletLandscapeLayout(BuildContext context, bool isTablet) {
+  // 🔹 Tablet Landscape Layout
+  Widget _buildTabletLandscapeLayout(BuildContext context, double width) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Left side - Welcome section
         Expanded(
           flex: 1,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [_buildWelcomeSection(isTablet)],
-          ),
+          child: Center(child: _buildWelcomeSection(context, width * 0.5)),
         ),
         const SizedBox(width: 40),
-        // Right side - Form section
         Expanded(
           flex: 1,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [_buildLoginForm(context, isTablet)],
-          ),
+          child: Center(child: _buildLoginForm(context, width * 0.5)),
         ),
       ],
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context, bool isTablet) {
+  // 🔹 Mobile / Portrait Layout
+  Widget _buildMobileLayout(BuildContext context, double width) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(height: isTablet ? 100 : 100),
-        _buildWelcomeSection(isTablet),
-        SizedBox(height: isTablet ? 60 : 50),
-        _buildLoginForm(context, isTablet),
-        SizedBox(height: isTablet ? 30 : 20),
+        SizedBox(height: width * 0.15),
+        _buildWelcomeSection(context, width),
+        SizedBox(height: width * 0.12),
+        _buildLoginForm(context, width),
+        SizedBox(height: width * 0.08),
       ],
     );
   }
 
-  Widget _buildWelcomeSection(bool isTablet) {
-    return Center(
-      child: Column(
+  // 🔹 Welcome Section
+  Widget _buildWelcomeSection(BuildContext context, double width) {
+    final isTablet = width > 600;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: isTablet ? 140 : 120,
+          height: isTablet ? 140 : 120,
+          child: Container(
+            padding: EdgeInsets.all(isTablet ? 28 : 20),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+
+              borderRadius: BorderRadius.circular(100), // full circle
+              boxShadow: AppColors.greenGlow,
+            ),
+            child: isDark
+                ? Image.asset('assets/images/farmlogo.png', fit: BoxFit.contain)
+                : Image.asset(
+                    'assets/images/Logo_2-Photoroom.png',
+                    fit: BoxFit.contain,
+                  ),
+          ),
+        ),
+        SizedBox(height: isTablet ? 24 : 16),
+        Text(
+          "Agrita",
+          style: TextStyle(
+            fontSize: isTablet ? 36 : 28,
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+            letterSpacing: 1.5,
+          ),
+        ),
+        SizedBox(height: isTablet ? 12 : 8),
+        Text(
+          "Smart Agriculture Platform",
+          style: TextStyle(
+            fontSize: isTablet ? 18 : 14,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  // 🔹 Login Form
+  Widget _buildLoginForm(BuildContext context, double width) {
+  final isTablet = width > 600;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      _buildTextField(
+        context: context,
+        controller: controller.phoneController,
+        label: 'Phone Number',
+        icon: Icons.phone_rounded,
+        keyboardType: TextInputType.phone,
+        validator: controller.validatePhone,
+        isTablet: isTablet,
+      ),
+      SizedBox(height: isTablet ? 24 : 20),
+      _buildTextField(
+        context: context,
+        controller: controller.passwordController,
+        label: 'Password',
+        icon: Icons.lock_rounded,
+        isPassword: true,
+        validator: controller.validatePassword,
+        isTablet: isTablet,
+      ),
+      SizedBox(height: 4),
+
+      // 🔹 Remember Me + Forgot Password row
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: EdgeInsets.all(isTablet ? 24 : 20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(isTablet ? 70 : 60),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryGreen.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.agriculture_rounded,
-              size: isTablet ? 90 : 80,
-              color: AppColors.white,
-            ),
+          Row(
+            children: [
+            // ✅ FIXED — wrap the entire Row containing the checkbox in Obx
+Obx(() {
+  return Row(
+    children: [
+      Checkbox(
+        value: controller.rememberMe.value,
+        activeColor: Theme.of(context).colorScheme.primary,
+        visualDensity: VisualDensity.compact,
+        onChanged: (val) => controller.rememberMe.value = val ?? false,
+      ),
+      Text(
+        "Remember Me",
+        style: TextStyle(
+          fontSize: isTablet ? 15 : 13,
+          color: isDark ? Colors.white70 : Colors.black54,
+        ),
+      ),
+    ],
+  );
+}), 
+            ],
           ),
-          SizedBox(height: isTablet ? 24 : 16),
-          Text(
-            "Agrita",
-            style: TextStyle(
-              fontSize: isTablet ? 32 : 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryGreen,
-            ),
-          ),
-          SizedBox(height: isTablet ? 12 : 8),
-          Text(
-            "Sign in to continue to agrita",
-            style: TextStyle(
-              fontSize: isTablet ? 20 : 16,
-              color: AppColors.lightGreen,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: isTablet ? 16 : 12),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 10 : 8,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: AppColors.secondaryGreen.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
+          TextButton(
+            onPressed: () => Get.to(() => ForgotPasswordView()),
             child: Text(
-              "🌱 Smart Agriculture Platform",
+              "Forgot Password?",
               style: TextStyle(
                 fontSize: isTablet ? 16 : 14,
-                color: AppColors.primaryGreen,
-                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+                decoration: TextDecoration.underline,
               ),
             ),
           ),
         ],
       ),
-    );
-  }
 
-  Widget _buildLoginForm(BuildContext context, bool isTablet) {
-    return Column(
-      children: [
-        // Phone Number Field
-        _buildTextField(
-          controller: controller.phoneController,
-          label: 'Phone Number',
-          icon: Icons.phone_rounded,
-          keyboardType: TextInputType.phone,
-          validator: controller.validatePhone,
-          isTablet: isTablet,
-        ),
+      SizedBox(height: isTablet ? 30 : 20),
+      _buildLoginButton(context, isTablet),
+    ],
+  );
+}
 
-        SizedBox(height: isTablet ? 24 : 20),
-
-        // Password Field
-        _buildTextField(
-          controller: controller.passwordController,
-          label: 'Password',
-          icon: Icons.lock_rounded,
-          isPassword: true,
-          validator: controller.validatePassword,
-          isTablet: isTablet,
-        ),
-
-        SizedBox(height: isTablet ? 40 : 30),
-
-        // Login Button
-        _buildLoginButton(isTablet),
-
-        SizedBox(height: isTablet ? 30 : 20),
-
-        // // Forgot Password
-        // _buildForgotPassword(isTablet),
-      ],
-    );
-  }
-
+  // 🔹 TextField Design
   Widget _buildTextField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -202,214 +221,119 @@ class LoginPage extends StatelessWidget {
     bool isPassword = false,
     required bool isTablet,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: isPassword && !this.controller.isPasswordVisible.value,
+      validator: validator,
+      style: TextStyle(
+        color: isDark ? AppColors.darkText : AppColors.lightText,
+        fontSize: isTablet ? 18 : 16,
+        fontWeight: FontWeight.w400,
       ),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        obscureText: isPassword && !this.controller.isPasswordVisible.value,
-        validator: validator,
-        style: TextStyle(
-          color: AppColors.black,
-          fontSize: isTablet ? 18 : 16,
-          fontWeight: FontWeight.w300,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: isDark ? AppColors.darkSubText : AppColors.lightSubText,
+          fontSize: isTablet ? 17 : 15,
         ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: AppColors.black,
-            fontSize: isTablet ? 17 : 15,
-            fontWeight: FontWeight.w300,
+        prefixIcon: Icon(icon, color: colorScheme.primary),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  this.controller.isPasswordVisible.value
+                      ? Icons.visibility_rounded
+                      : Icons.visibility_off_rounded,
+                  color: colorScheme.secondary,
+                ),
+                onPressed: this.controller.togglePasswordVisibility,
+              )
+            : null,
+        filled: true,
+        fillColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+          borderSide: BorderSide(color: colorScheme.secondary),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white24 : Colors.black26,
           ),
-          prefixIcon: Icon(
-            icon,
-            color: AppColors.secondaryGreen,
-            size: isTablet ? 26 : 22,
-          ),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    this.controller.isPasswordVisible.value
-                        ? Icons.visibility_rounded
-                        : Icons.visibility_off_rounded,
-                    color: AppColors.secondaryGreen,
-                    size: isTablet ? 26 : 22,
-                  ),
-                  onPressed: this.controller.togglePasswordVisibility,
-                )
-              : null,
-          filled: true,
-          fillColor: AppColors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: AppColors.lightGreen),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(
-              color: AppColors.lightGreen,
-              width: 1.5,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(
-              color: AppColors.primaryGreen,
-              width: 2.5,
-            ),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: AppColors.errorRed, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
-            borderSide: const BorderSide(color: AppColors.errorRed, width: 2.5),
-          ),
-          errorStyle: TextStyle(
-            color: AppColors.errorRed,
-            fontSize: isTablet ? 14 : 13,
-            fontWeight: FontWeight.w500,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 24 : 20,
-            vertical: isTablet ? 22 : 18,
-          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        errorStyle: TextStyle(
+          color: AppColors.errorRed,
+          fontSize: isTablet ? 14 : 13,
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 24 : 20,
+          vertical: isTablet ? 20 : 16,
         ),
       ),
     );
   }
 
-  Widget _buildLoginButton(bool isTablet) {
+  // 🔹 Login Button
+  Widget _buildLoginButton(BuildContext context, bool isTablet) {
+    final theme = Theme.of(context);
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return controller.isLoading.value
-        ? Center(
-            child: Container(
-              width: isTablet ? 80 : 60,
-              height: isTablet ? 80 : 60,
-              padding: EdgeInsets.all(isTablet ? 20 : 15),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(isTablet ? 40 : 30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: CircularProgressIndicator(
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primaryGreen,
-                ),
-                strokeWidth: isTablet ? 4 : 3,
-              ),
-            ),
-          )
-        : Container(
+        ? CircularProgressIndicator(color: colorScheme.secondary)
+        : SizedBox(
             width: double.infinity,
             height: isTablet ? 65 : 55,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: AppColors.primaryGreen.withOpacity(0.4),
-              //     blurRadius: 15,
-              //     offset: const Offset(0, 8),
-              //   ),
-              // ],
-            ),
             child: ElevatedButton(
               onPressed: controller.login,
               style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.login_rounded,
-                    color: AppColors.white,
-                    size: isTablet ? 26 : 22,
+              ).copyWith(elevation: WidgetStateProperty.all(0)),
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkPrimary : AppColors.lightAccent,
+
+                  borderRadius: BorderRadius.circular(isTablet ? 20 : 15),
+                  boxShadow: AppColors.greenGlow,
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.login_rounded,
+                        color: Colors.black,
+                        size: isTablet ? 26 : 22,
+                      ),
+                      SizedBox(width: isTablet ? 12 : 10),
+                      Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: isTablet ? 20 : 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: isTablet ? 12 : 10),
-                  Text(
-                    "Login to agrita",
-                    style: TextStyle(
-                      fontSize: isTablet ? 20 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           );
   }
-
-  // Widget _buildForgotPassword(bool isTablet) {
-  //   return Center(
-  //     child: Container(
-  //       decoration: BoxDecoration(borderRadius: BorderRadius.circular(25)),
-  //       child: TextButton(
-  //         onPressed: () {
-  //           // Add forgot password functionality if needed
-  //           Get.snackbar(
-  //             "Info",
-  //             "Contact your administrator for password reset",
-  //             backgroundColor: AppColors.secondaryGreen.withOpacity(0.1),
-  //             colorText: AppColors.primaryGreen,
-  //             icon: const Icon(
-  //               Icons.info_outline_rounded,
-  //               color: AppColors.secondaryGreen,
-  //             ),
-  //           );
-  //         },
-  //         style: TextButton.styleFrom(
-  //           padding: EdgeInsets.symmetric(
-  //             horizontal: isTablet ? 24 : 20,
-  //             vertical: isTablet ? 16 : 12,
-  //           ),
-  //         ),
-  //         child: Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Icon(
-  //               Icons.help_outline_rounded,
-  //               color: AppColors.primaryGreen,
-  //               size: isTablet ? 22 : 20,
-  //             ),
-  //             SizedBox(width: isTablet ? 8 : 6),
-  //             Text(
-  //               "Forgot Password?",
-  //               style: TextStyle(
-  //                 color: AppColors.primaryGreen,
-  //                 fontWeight: FontWeight.w600,
-  //                 fontSize: isTablet ? 18 : 16,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }
